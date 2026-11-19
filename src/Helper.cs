@@ -19,7 +19,8 @@ namespace TinyGuard
     /// <summary>Settings for the family helper ("old person's") mode. Kept in helper.ini; the mail password is protected with Windows DPAPI.</summary>
     class HelperConfig
     {
-        public bool On, Wizard = true, AutoCheck = true, IntroDone;
+        public bool On, Wizard, AutoCheck = true, IntroDone;
+        public long SleepUntil;      // the wizard is asleep (silent and hidden) until this moment
         public string Name = "your kid", Email = "", Smtp = "", User = "", Pass = "", Server = "";
         public int Port = 587;
 
@@ -27,7 +28,7 @@ namespace TinyGuard
 
         public static HelperConfig Load(string dir)
         {
-            var c = new HelperConfig();
+            var c = new HelperConfig(); bool sawWizard = false;
             try
             {
                 foreach (string l in File.ReadAllLines(FileOf(dir)))
@@ -37,7 +38,8 @@ namespace TinyGuard
                     switch (k)
                     {
                         case "on": c.On = v == "1"; break;
-                        case "wizard": c.Wizard = v != "0"; break;
+                        case "wizard": c.Wizard = v != "0"; sawWizard = true; break;
+                        case "sleepUntil": long.TryParse(v, out c.SleepUntil); break;
                         case "autoCheck": c.AutoCheck = v != "0"; break;
                         case "intro": c.IntroDone = v == "1"; break;
                         case "name": if (v.Trim().Length > 0) c.Name = v.Trim(); break;
@@ -51,6 +53,7 @@ namespace TinyGuard
                 }
             }
             catch { }
+            if (!sawWizard) c.Wizard = c.On;       // set up before the wizard existed: he shows up with helper mode
             return c;
         }
 
@@ -58,7 +61,7 @@ namespace TinyGuard
         {
             string pw = "";
             try { if (Pass.Length > 0) pw = Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(Pass), null, DataProtectionScope.CurrentUser)); } catch { }
-            File.WriteAllLines(FileOf(dir), new[] { "on=" + (On ? "1" : "0"), "wizard=" + (Wizard ? "1" : "0"), "autoCheck=" + (AutoCheck ? "1" : "0"), "intro=" + (IntroDone ? "1" : "0"), "name=" + Name, "email=" + Email, "smtp=" + Smtp, "port=" + Port, "user=" + User, "pass=" + pw, "server=" + Server });
+            File.WriteAllLines(FileOf(dir), new[] { "on=" + (On ? "1" : "0"), "wizard=" + (Wizard ? "1" : "0"), "sleepUntil=" + SleepUntil, "autoCheck=" + (AutoCheck ? "1" : "0"), "intro=" + (IntroDone ? "1" : "0"), "name=" + Name, "email=" + Email, "smtp=" + Smtp, "port=" + Port, "user=" + User, "pass=" + pw, "server=" + Server });
         }
 
         public bool MailReady { get { return Email.Length > 3 && Smtp.Length > 0; } }
@@ -197,6 +200,7 @@ namespace TinyGuard
 
         public static void Say(string text, bool withHelpButton, string code = null, Action extra = null)
         {
+            if (Wizard.Asleep) return;                                           // he is asleep: nothing pops up
             if (!DryRun && Wizard.Enabled) { Wizard.Say(text, withHelpButton, code); return; }
             if (current != null && !current.IsDisposed) { waiting.Enqueue(() => Say(text, withHelpButton, code, extra)); return; }
             var b = new HelperBubble(text, withHelpButton, code, !DryRun);
@@ -484,7 +488,7 @@ namespace TinyGuard
             Func<HelperConfig> read = () =>
             {
                 int port; if (!int.TryParse(tPort.Text.Trim(), out port)) port = 587;
-                return new HelperConfig { On = cOn.Checked, Wizard = cWiz.Checked, AutoCheck = cAuto.Checked, IntroDone = c.IntroDone, Name = tName.Text.Trim().Length > 0 ? tName.Text.Trim() : "your kid", Email = tEmail.Text.Trim(), Smtp = tSmtp.Text.Trim(), Port = port, User = tUser.Text.Trim(), Pass = tPass.Text, Server = tServer.Text.Trim() };
+                return new HelperConfig { On = cOn.Checked, Wizard = cWiz.Checked, AutoCheck = cAuto.Checked, IntroDone = c.IntroDone, SleepUntil = c.SleepUntil, Name = tName.Text.Trim().Length > 0 ? tName.Text.Trim() : "your kid", Email = tEmail.Text.Trim(), Smtp = tSmtp.Text.Trim(), Port = port, User = tUser.Text.Trim(), Pass = tPass.Text, Server = tServer.Text.Trim() };
             };
             bSave.Click += (s, e) => { Helper.Apply(read()); lMsg.Text = cOn.Checked ? "Saved. Family helper mode is on and the screen saver is turned on." : "Saved. Family helper mode is off."; };
             bTest.Click += (s, e) => { Helper.Apply(read()); Helper.Greet(true); };

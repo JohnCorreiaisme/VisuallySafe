@@ -207,7 +207,7 @@ namespace TinyGuardSetup
                 var kv = new System.Collections.Generic.Dictionary<string, string> { { "on", "0" }, { "wizard", "1" }, { "autoCheck", "1" }, { "intro", "0" }, { "name", "your family" }, { "email", "" }, { "smtp", "" }, { "port", "587" }, { "user", "" }, { "pass", "" }, { "server", "" } };
                 if (File.Exists(ini))
                     foreach (string l in File.ReadAllLines(ini)) { int i = l.IndexOf('='); if (i > 0) kv[l.Substring(0, i)] = l.Substring(i + 1); }
-                kv["on"] = wizard ? "1" : kv["on"]; kv["wizard"] = "1";
+                kv["on"] = wizard ? "1" : kv["on"]; kv["wizard"] = wizard ? "1" : "0";
                 if (name.Length > 0) kv["name"] = name;
                 if (email.Length > 0) kv["email"] = email;
                 File.WriteAllLines(ini, kv.Select(p => p.Key + "=" + p.Value));

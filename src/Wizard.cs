@@ -146,7 +146,7 @@ namespace TinyGuard
             menu.Items.Add("What do the boxes mean?", null, (s, e) => Wizard.Say(Wizard.BoxesText(), false, null));
             menu.Items.Add("Support TinyGuard (Ko-fi)", null, (s, e) => { try { Process.Start(new ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } });
             menu.Items.Add("Close the wizard (Alt+click)", null, (s, e) => Wizard.Dismiss());
-            menu.Items.Add("Let the wizard rest for an hour", null, (s, e) => { RestUntil = DateTime.Now.AddHours(1); Hide(); });
+            menu.Items.Add("Let the wizard sleep for 48 hours", null, (s, e) => Wizard.Sleep(48));
             ContextMenuStrip = menu;
             // pick him up and carry him anywhere; let go and he drops back onto the taskbar. A plain click opens the question window.
             MouseDown += (s, e) =>
@@ -563,7 +563,7 @@ namespace TinyGuard
     /// <summary>The window where the person types or speaks a question.</summary>
     class WizardAsk : Form
     {
-        readonly TextBox tIn; readonly Label lAns; readonly Button bAsk, bMic; Button bFix;
+        readonly TextBox tIn, lAns; readonly Button bAsk, bMic; Button bFix;
         System.Speech.Recognition.SpeechRecognitionEngine rec;
         static Font Px(float px, FontStyle st) { return new Font("Segoe UI", px, st, GraphicsUnit.Pixel); }
 
@@ -572,10 +572,10 @@ namespace TinyGuard
             Text = "Ask the wizard"; Icon = Theme.AppIcon(); TopMost = true; StartPosition = FormStartPosition.Manual;
             FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; ShowInTaskbar = false;
             BackColor = Color.FromArgb(255, 252, 232); ForeColor = Color.Black;
-            var wa = Screen.PrimaryScreen.WorkingArea; int w = Math.Min(760, wa.Width - 40), h = 560;
+            var wa = Screen.PrimaryScreen.WorkingArea; int w = Math.Min(760, wa.Width - 40), h = 626;
             ClientSize = new Size(w, h); Location = new Point(wa.Left + (wa.Width - w) / 2, Math.Max(wa.Top + 10, wa.Bottom - h - 280));
             Controls.Add(new Label { Text = "Ask me anything about your computer", Font = Px(26, FontStyle.Bold), Left = 20, Top = 14, Width = w - 40, Height = 40 });
-            lAns = new Label { Font = Px(24, FontStyle.Regular), Left = 20, Top = 62, Width = w - 40, Height = 230, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(10), Text = "Hello! I am your wizard. Type a question below, or press the microphone and speak." };
+            lAns = new TextBox { Font = Px(22, FontStyle.Regular), Left = 20, Top = 62, Width = w - 40, Height = 230, BackColor = Color.White, ForeColor = Color.Black, BorderStyle = BorderStyle.FixedSingle, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Text = "Hello! I am your wizard. Type a question below, or press the microphone and speak." };
             tIn = new TextBox { Font = Px(26, FontStyle.Regular), Left = 20, Top = 304, Width = w - 40 };
             bAsk = Mk("Ask", Color.FromArgb(34, 139, 70), 20, 356, 150); bMic = Mk("🎤 Speak", Color.FromArgb(110, 70, 170), 182, 356, 180);
             var bBoxes = Mk("What do the boxes mean?", Color.FromArgb(30, 90, 190), 20, 424, 340);
@@ -584,7 +584,21 @@ namespace TinyGuard
             var bItems = Mk("Check my Desktop now", Color.FromArgb(30, 90, 190), 372, 486, 340);
             bFix = Mk("Fix it", Color.FromArgb(200, 60, 40), 374, 356, 170); bFix.Visible = false;
             var bClose = Mk("Close", Color.FromArgb(90, 90, 90), 556, 356, 184);
-            Controls.AddRange(new Control[] { lAns, tIn, bAsk, bMic, bBoxes, bSafe, bDesk, bItems, bFix, bClose });
+            var bTopics = Mk("Common problems  \u25BE", Color.FromArgb(110, 70, 170), 20, 548, 340);
+            var bSleep = Mk("Sleep for 48 hours", Color.FromArgb(90, 90, 90), 372, 548, 340);
+            Controls.AddRange(new Control[] { lAns, tIn, bAsk, bMic, bBoxes, bSafe, bDesk, bItems, bFix, bClose, bTopics, bSleep });
+            bSleep.Click += (s, e) => { Wizard.Sleep(48); Close(); };
+            bTopics.Click += (s, e) =>
+            {
+                var m = new ContextMenuStrip { Font = Px(19, FontStyle.Regular) };
+                foreach (var grp in WizardHelp.Topics.GroupBy(t => t.Category))
+                {
+                    var sub = new ToolStripMenuItem(grp.Key);
+                    foreach (var t in grp) { var tt = t; sub.DropDownItems.Add(tt.Title, null, (s2, e2) => Show(tt.Text.Replace("{who}", Wizard.Who))); }
+                    m.Items.Add(sub);
+                }
+                m.Show(bTopics, new Point(0, -m.Items.Count * 34));
+            };
             AcceptButton = bAsk;
             bAsk.Click += (s, e) => Go(tIn.Text);
             bBoxes.Click += (s, e) => Go("What do the boxes around my icons mean?");
@@ -605,7 +619,7 @@ namespace TinyGuard
 
         void Show(string answer)
         {
-            lAns.Text = answer; bAsk.Enabled = true;
+            lAns.Text = answer.Replace("\r\n", "\n").Replace("\n", "\r\n"); bAsk.Enabled = true;
             Wizard.Speak(answer);
         }
 
@@ -674,6 +688,26 @@ namespace TinyGuard
         public static volatile bool Talking;
         public static volatile int Mouth; static int lastViseme;
         public static bool Forced;
+        public static bool Asleep { get { return Helper.Cfg != null && Helper.Cfg.SleepUntil > DateTime.Now.Ticks; } }
+
+        /// <summary>Send him to sleep: hidden and silent for the given hours, even after a restart.</summary>
+        public static void Sleep(double hours)
+        {
+            if (Helper.Cfg == null) return;
+            Helper.Cfg.SleepUntil = DateTime.Now.AddHours(hours).Ticks; Forced = false;
+            try { Helper.Cfg.Save(eng.DataDir); } catch { }
+            StopSpeaking();
+            if (sync != null) sync.BeginInvoke(new Action(Sync));
+        }
+
+        public static void Wake()
+        {
+            if (Helper.Cfg == null) return;
+            Helper.Cfg.SleepUntil = 0; Dismissed = false;
+            try { Helper.Cfg.Save(eng.DataDir); } catch { }
+            if (sync != null) sync.BeginInvoke(new Action(Sync));
+        }
+
         public static bool Dismissed;              // closed with Alt+click: gone until TinyGuard starts again, or until he is called from the AI helper page
         public static void Dismiss() { Dismissed = true; StopSpeaking(); if (sync != null) sync.BeginInvoke(new Action(Sync)); }                 // summoned with the big button even though family helper mode is off
         static System.Windows.Forms.Timer narrateTimer;
@@ -691,20 +725,20 @@ namespace TinyGuard
         }
 
         public static string Who { get { return Helper.Cfg != null ? Helper.Cfg.Name : "your family"; } }
-        public static bool Enabled { get { WizardSprites.Load(); return Helper.Cfg != null && !Dismissed && (Forced || (Helper.Cfg.On && Helper.Cfg.Wizard)) && WizardSprites.Ok; } }
+        public static bool Enabled { get { WizardSprites.Load(); return Helper.Cfg != null && !Dismissed && !Asleep && (Forced || Helper.Cfg.Wizard) && WizardSprites.Ok; } }
 
         /// <summary>The big button: bring the wizard out and open the question window.</summary>
         public static void Summon()
         {
             if (sync == null) return;
-            sync.BeginInvoke(new Action(() => { Dismissed = false; Forced = true; Sync(); if (form != null) form.WaveUntil = DateTime.Now.AddSeconds(3); OpenAsk(); }));
+            sync.BeginInvoke(new Action(() => { Dismissed = false; Forced = true; if (Helper.Cfg != null) Helper.Cfg.SleepUntil = 0; Sync(); if (form != null) form.WaveUntil = DateTime.Now.AddSeconds(3); OpenAsk(); }));
         }
 
         public static void Start(Engine e, Control s)
         {
             eng = e; sync = s;
             tipTimer = new System.Windows.Forms.Timer { Interval = 60000 };
-            tipTimer.Tick += (a, b) => Tip();
+            tipTimer.Tick += (a, b) => { Sync(); Tip(); };
             tipTimer.Start();
             narrateTimer = new System.Windows.Forms.Timer { Interval = 4000 };
             narrateTimer.Tick += (a, b) => { try { Narrate(); } catch { } };
@@ -976,15 +1010,7 @@ namespace TinyGuard
             if ((DateTime.Now - lastTip).TotalMinutes < 45 || ScreenSaver.Active) return;
             try { if (IdleInfo.FullscreenAppActive()) return; } catch { }
             lastTip = DateTime.Now;
-            string[] tips =
-            {
-                "Tip: the little boxes on your icons tell you if a file is safe. Click me and ask if you want to know what they mean.",
-                "If something on the screen looks strange, click me and ask, or press the I need help button.",
-                "I check your computer every Monday and Thursday, and I keep my protection up to date by myself.",
-                "Never click a link in an email from someone you do not know, even if it sounds urgent.",
-                "A real company will never phone you and ask to take control of your computer. If someone does, hang up and tell " + Who + "."
-            };
-            Say(tips[tipIndex++ % tips.Length], tipIndex % 2 == 0, null);
+            Say(WizardHelp.NextTip(Who), ++tipIndex % 2 == 0, null);
         }
 
         /// <summary>Called when the mouse rests on an icon and the badge appears.</summary>
@@ -1032,6 +1058,8 @@ namespace TinyGuard
         {
             string ql = q.ToLowerInvariant();
             if (Regex.IsMatch(ql, @"\b(virus|infect\w*|hacked|protected|am i safe|is my (computer|pc) (safe|ok|okay))\b")) { int lv; bool fx; return HealthText(out lv, out fx); }
+            var topic = WizardHelp.Find(q);
+            string helpText = topic != null ? topic.Text.Replace("{who}", Who) : null;
             try
             {
                 var ep = Llm.Preferred;
@@ -1039,9 +1067,9 @@ namespace TinyGuard
                 if (ep != null)
                 {
                     string sys = "You are a kind, patient old wizard who lives on the screen of an elderly person's computer and helps them stay safe. " +
-                        "Answer in at most three short, simple sentences, in plain everyday words, with no jargon, no lists and no markdown. " +
+                        (helpText != null ? "Explain the steps you are given clearly, one step at a time, in plain everyday words and no markdown. " : "Answer in at most three short, simple sentences, in plain everyday words, with no jargon, no lists and no markdown. ") +
                         "Never tell them to type commands, change settings or delete files. If you are not sure, or it sounds dangerous, tell them to ask " + Who + " or press the I need help button. " +
-                        "Use these facts when they are relevant and never contradict them.\n" + Facts();
+                        "Use these facts when they are relevant and never contradict them.\n" + Facts() + (helpText != null ? "\nSTEPS TO EXPLAIN (keep every step, in order):\n" + helpText : "");
                     using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60)))
                     {
                         string a = Llm.StripThinking(Llm.Chat(ep, sys, q, cts.Token));
@@ -1051,7 +1079,8 @@ namespace TinyGuard
                 }
             }
             catch { }
-            // no AI available: answer the common questions from what the program knows
+            // no AI available: use the program's own detailed answers
+            if (helpText != null) return helpText;
             if (Regex.IsMatch(ql, "box|square|green|yellow|red|ring|glow|tick|check mark|mean")) return BoxesText();
             if (Regex.IsMatch(ql, "safe|virus|infect|hack|ok|okay|fine|problem")) return Status();
             if (Regex.IsMatch(ql, "scan|check"))

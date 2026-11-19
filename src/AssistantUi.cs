@@ -75,8 +75,8 @@ namespace TinyGuard
         readonly DarkList list = new DarkList(52);
         readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer { Interval = 500 };
 
-        readonly WizardLanding landing; readonly Btn bTools, bWiz;
-        void ShowTools(bool on) { landing.Visible = bTools.Visible = !on; bWiz.Visible = on; if (!on) { landing.BringToFront(); bTools.BringToFront(); } }
+        readonly WizardLanding landing; readonly Btn bTools, bWiz; CheckBox cWizStart; bool syncingWizBox;
+        void ShowTools(bool on) { landing.Visible = bTools.Visible = cWizStart.Visible = !on; bWiz.Visible = on; if (!on) { landing.BringToFront(); cWizStart.BringToFront(); bTools.BringToFront(); } }
 
         AssistantContext ctx;
         List<ProposedAction> actions = new List<ProposedAction>();
@@ -129,14 +129,23 @@ namespace TinyGuard
             bUpdate.Click += (s, e) => { var f = new SelfUpdateForm(eng); f.Show(); f.Activate(); };
             bCopy.BringToFront(); bPaste.BringToFront();    // nothing may sit on top of these two
             // the big wizard button covers the fix-it tools until you ask for them
-            landing = new WizardLanding { Bounds = new Rectangle(28, 84, 614, 392) };
+            landing = new WizardLanding { Bounds = new Rectangle(28, 84, 614, 360) };
+            cWizStart = new CheckBox { Text = "Show the wizard when TinyGuard starts", Bounds = new Rectangle(28, 452, 614, 28), ForeColor = Theme.Text, BackColor = Theme.Bg, Font = new Font("Segoe UI", 11f), Cursor = Cursors.Hand };
+            cWizStart.CheckedChanged += (s, e) =>
+            {
+                if (syncingWizBox || Helper.Cfg == null) return;
+                Helper.Cfg.Wizard = cWizStart.Checked;
+                try { Helper.Cfg.Save(eng.DataDir); } catch { }
+                Wizard.Sync();
+            };
+            VisibleChanged += (s, e) => { if (Visible && Helper.Cfg != null) { syncingWizBox = true; cWizStart.Checked = Helper.Cfg.Wizard; syncingWizBox = false; } };
             landing.Pressed += () => Wizard.Summon();
             bTools = new Btn("Fix problems with Claude Code or Codex   ▸") { Bounds = new Rectangle(28, 486, 614, 48) };
             bTools.Click += (s, e) => ShowTools(true);
             bWiz = new Btn("◂ Wizard") { Bounds = new Rectangle(300, 14, 100, 34), Visible = false };
             bWiz.Click += (s, e) => ShowTools(false);
-            Controls.AddRange(new Control[] { landing, bTools, bWiz });
-            landing.BringToFront(); bTools.BringToFront(); bWiz.BringToFront();
+            Controls.AddRange(new Control[] { landing, cWizStart, bTools, bWiz });
+            landing.BringToFront(); cWizStart.BringToFront(); bTools.BringToFront(); bWiz.BringToFront();
             timer.Tick += (s, e) => Tick();
             timer.Start();
             reply.Visible = listTitle.Visible = list.Visible = bApply.Visible = bClear.Visible = false;

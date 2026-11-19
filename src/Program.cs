@@ -74,6 +74,7 @@ namespace TinyGuard
                 new ToolStripMenuItem("Update TinyGuard with AI…", null, (s, e) => { var f = new SelfUpdateForm(eng); f.Show(); f.Activate(); }),
                 new ToolStripMenuItem("Microsoft Defender: status", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.StatusText()).ContinueWith(t => tray.ShowBalloonTip(9000, "Microsoft Defender", t.Result, ToolTipIcon.Info))),
                 new ToolStripMenuItem("Microsoft Defender: update definitions now", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.UpdateSignatures()).ContinueWith(t => tray.ShowBalloonTip(6000, "Microsoft Defender", t.Result != null ? "Definitions are up to date." : "Could not update them just now.", ToolTipIcon.Info))),
+                new ToolStripMenuItem("Wake the wizard", null, (s, e) => Wizard.Wake()),
                 new ToolStripMenuItem("Support TinyGuard (Ko-fi)", null, (s, e) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } }),
                 new ToolStripMenuItem("Family helper mode…", null, (s, e) => { var f = new HelperSetupForm(eng); f.Show(); f.Activate(); }),
                 new ToolStripSeparator(),
@@ -759,6 +760,21 @@ namespace TinyGuard
                     try { Directory.Delete(ss.Root, true); } catch { }
                 }
                 File.WriteAllText(Arg(args, "--update-test"), lg.ToString());
+                return 0;
+            }
+            if (Arg(args, "--help-test") != null)   // developer aid: which built-in answer the wizard picks for some typical questions
+            {
+                string nl3 = Environment.NewLine;
+                var sb = new System.Text.StringBuilder();
+                sb.Append("tips: " + WizardHelp.Tips.Length + ", topics: " + WizardHelp.Topics.Length + nl3);
+                foreach (string q in new[] { "my computer is frozen", "the internet is not working", "someone phoned me saying my computer has a virus", "how do i copy and paste", "i cannot hear anything", "my grandson needs money", "what is the weather", "the printer wont print", "i forgot my password", "i lost a file", "pop up keeps appearing" })
+                {
+                    var t = WizardHelp.Find(q);
+                    sb.Append(q + " => " + (t != null ? t.Title : "(no match)") + nl3);
+                }
+                int longest = 0; foreach (var t in WizardHelp.Topics) longest = Math.Max(longest, t.Text.Length);
+                sb.Append("longest answer: " + longest + " characters" + nl3);
+                File.WriteAllText(Arg(args, "--help-test"), sb.ToString());
                 return 0;
             }
             if (Arg(args, "--health-test") != null)   // developer aid: what the wizard would say about Windows' protection right now
