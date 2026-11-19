@@ -679,7 +679,7 @@ namespace TinyGuard
         Panel quarPage;
         readonly DetailView detail = new DetailView();
         readonly Btn bRestore = new Btn("Restore"), bDelete = new Btn("Delete forever") { Danger = true };
-        readonly CheckBox cStartup, cCloud, cAuto, cDefender;
+        readonly CheckBox cStartup, cCloud, cAuto, cDefender, cGlow;
         readonly Btn bBadge;
         static string BadgeText(int h) { return h <= 0 ? "scanned badge: off  ▾" : h >= 100000 ? "scanned badge: never expires  ▾" : "scanned badge lasts " + BadgeDialog.Fmt(h) + "  ▾"; }
         readonly ListBox lFolders, lSafe;
@@ -825,7 +825,10 @@ namespace TinyGuard
             cStartup.Width = 330;
             cDefender = Check("Ask Microsoft Defender too", 62);
             cDefender.Bounds = new Rectangle(366, 62, 276, 24);
-            cCloud = Check("Check files online and update YARA rules daily (only fingerprints are sent)", 88);
+            cCloud = Check("Check files online (only fingerprints are sent)", 88);
+            cCloud.Width = 330;
+            cGlow = Check("Show the scan swirl around icons", 88);
+            cGlow.Bounds = new Rectangle(366, 88, 276, 24);
             cAuto = Check("Move known malware to quarantine automatically", 114);
             cAuto.Width = 330;
             bBadge = new Btn("") { Bounds = new Rectangle(366, 110, 276, 28) };
@@ -835,6 +838,7 @@ namespace TinyGuard
             cStartup.CheckedChanged += (s, e) => { if (!loading) Startup.Set(cStartup.Checked); };
             cCloud.CheckedChanged += (s, e) => { if (!loading) { eng.S.Cloud = cCloud.Checked; eng.S.Save(); RefreshAll(true); } };
             cAuto.CheckedChanged += (s, e) => { if (!loading) { eng.S.AutoQuarantine = cAuto.Checked; eng.S.Save(); } };
+            cGlow.CheckedChanged += (s, e) => { if (!loading) { eng.S.ScanGlow = cGlow.Checked; eng.S.Save(); } };
             cDefender.CheckedChanged += (s, e) => { if (!loading) { eng.S.UseDefender = cDefender.Checked; eng.S.Save(); } };
 
             var lSv = Small("Screen saver", 146); lSv.Font = new Font("Segoe UI Semibold", 10f); lSv.ForeColor = Theme.Text;
@@ -933,7 +937,7 @@ namespace TinyGuard
             var l5 = lRules;
             var l4 = Small("TinyGuard's files: " + eng.DataDir, 540);
             l4.ForeColor = Theme.Grey;
-            ps.Controls.AddRange(new Control[] { cStartup, cDefender, cCloud, cAuto, bBadge, lSv, cSaverIdle, bSaverMinutes, cSaverSys, bSaverMode, cSaverDefrag, bSaverNow, bDefragNow, lSaver, l5, bRules, l1, lFolders, a1, r1, l2, lSafe, a2, r2, l3, tKey, sk, l4 });
+            ps.Controls.AddRange(new Control[] { cStartup, cDefender, cCloud, cGlow, cAuto, bBadge, lSv, cSaverIdle, bSaverMinutes, cSaverSys, bSaverMode, cSaverDefrag, bSaverNow, bDefragNow, lSaver, l5, bRules, l1, lFolders, a1, r1, l2, lSafe, a2, r2, l3, tKey, sk, l4 });
             pages[9] = ps;
             network = new NetworkView(eng);
             network.ElevateRequested += () => { if (ElevateRequested != null) ElevateRequested(); };
@@ -1223,6 +1227,7 @@ namespace TinyGuard
             cStartup.Checked = Startup.Get();
             cCloud.Checked = eng.S.Cloud;
             cDefender.Checked = eng.S.UseDefender;
+            cGlow.Checked = eng.S.ScanGlow;
             cAuto.Checked = eng.S.AutoQuarantine;
             cSaverIdle.Checked = eng.S.ScreensaverIdle && !eng.S.SystemSaver;
             cSaverSys.Checked = eng.S.SystemSaver;
