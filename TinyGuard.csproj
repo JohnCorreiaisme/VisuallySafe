@@ -6,7 +6,7 @@
     <LangVersion>9.0</LangVersion>
     <AssemblyName>TinyGuard</AssemblyName>
     <RootNamespace>TinyGuard</RootNamespace>
-    <Version>1.0.77</Version>
+    <Version>1.0.78</Version>
     <ApplicationIcon>TinyGuard.ico</ApplicationIcon>
     <Nullable>disable</Nullable>
     <DebugType>none</DebugType>

@@ -303,9 +303,8 @@ namespace TinyGuard
     {
         readonly string text, code;
         readonly bool speak;
-        bool talking; int frame;
         System.Speech.Synthesis.SpeechSynthesizer voice;
-        System.Windows.Forms.Timer anim, auto;
+        System.Windows.Forms.Timer auto;
         readonly Button bOk, bHelp;
 
         static Font Px(float px, FontStyle st) { return new Font("Segoe UI", px, st, GraphicsUnit.Pixel); }
@@ -334,9 +333,6 @@ namespace TinyGuard
             bOk.SetBounds(right - bw, y, bw, bh);
             if (bHelp != null) bHelp.SetBounds(right - bw * 2 - 20, y, bw, bh);
 
-            anim = new System.Windows.Forms.Timer { Interval = 140 };
-            anim.Tick += (s, e) => { frame++; Invalidate(new Rectangle(0, 0, 330, Height)); };
-            anim.Start();
             // fall back: close by itself after a while if nobody is there (codes stay up longer)
             auto = new System.Windows.Forms.Timer { Interval = code != null ? 600000 : 180000 };
             auto.Tick += (s, e) => Close();
@@ -357,8 +353,6 @@ namespace TinyGuard
             try
             {
                 voice = new System.Speech.Synthesis.SpeechSynthesizer { Rate = -2, Volume = 100 };
-                voice.SpeakStarted += (s, ev) => talking = true;
-                voice.SpeakCompleted += (s, ev) => talking = false;
                 string say = text;
                 if (code != null) say += " " + string.Join(", ", code.Select(ch => ch.ToString())) + ". Again: " + string.Join(", ", code.Select(ch => ch.ToString())) + ".";
                 voice.SpeakAsync(say);
@@ -369,7 +363,7 @@ namespace TinyGuard
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             try { if (voice != null) { voice.SpeakAsyncCancelAll(); voice.Dispose(); } } catch { }
-            if (anim != null) anim.Dispose(); if (auto != null) auto.Dispose();
+            if (auto != null) auto.Dispose();
             base.OnFormClosed(e);
         }
 
@@ -378,20 +372,12 @@ namespace TinyGuard
             var g = e.Graphics; g.SmoothingMode = SmoothingMode.AntiAlias; g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
             int H = Height, W = Width;
             // bubble
-            var bubble = new RectangleF(300, 10, W - 310, H - 20);
+            var bubble = new RectangleF(10, 10, W - 20, H - 20);
             using (var path = Theme.Round(bubble, 36))
             {
                 using (var br = new SolidBrush(Color.FromArgb(255, 252, 232))) g.FillPath(br, path);
                 using (var pen = new Pen(Color.FromArgb(40, 40, 40), 6)) g.DrawPath(pen, path);
             }
-            // tail toward the face
-            var tail = new[] { new PointF(304, H * 0.42f), new PointF(240, H * 0.55f), new PointF(304, H * 0.62f) };
-            using (var br = new SolidBrush(Color.FromArgb(255, 252, 232))) g.FillPolygon(br, tail);
-            using (var pen = new Pen(Color.FromArgb(40, 40, 40), 6)) g.DrawLines(pen, tail);
-            using (var br = new SolidBrush(Color.FromArgb(255, 252, 232))) g.FillRectangle(br, 300, H * 0.42f + 3, 8, H * 0.2f - 6);
-
-            DrawFace(g, new RectangleF(30, H / 2f - 130, 240, 260));
-
             // words
             var area = new RectangleF(bubble.X + 36, bubble.Y + 26, bubble.Width - 72, (code != null ? 150 : H - 150));
             float size = 44;
@@ -412,37 +398,6 @@ namespace TinyGuard
                 using (var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
                 using (var br = new SolidBrush(Color.FromArgb(20, 60, 170)))
                     g.DrawString(code, cf, br, new RectangleF(bubble.X, bubble.Y + 130, bubble.Width, 190), sf);
-        }
-
-        void DrawFace(Graphics g, RectangleF r)
-        {
-            float cx = r.X + r.Width / 2, cy = r.Y + r.Height / 2 - 10, rad = Math.Min(r.Width, r.Height) / 2 - 8;
-            float bob = (float)Math.Sin(frame * 0.5) * (talking ? 3 : 1);
-            cy += bob;
-            // body
-            using (var br = new SolidBrush(Color.FromArgb(48, 110, 200))) g.FillPie(br, cx - rad * 1.1f, cy + rad * 0.85f, rad * 2.2f, rad * 1.6f, 180, 180);
-            // head
-            using (var br = new SolidBrush(Color.FromArgb(255, 214, 160))) g.FillEllipse(br, cx - rad, cy - rad, rad * 2, rad * 2);
-            using (var pen = new Pen(Color.FromArgb(40, 40, 40), 5)) g.DrawEllipse(pen, cx - rad, cy - rad, rad * 2, rad * 2);
-            // hair
-            using (var br = new SolidBrush(Color.FromArgb(90, 60, 40))) g.FillPie(br, cx - rad, cy - rad, rad * 2, rad * 2, 190, 160);
-            // eyes (blink now and then)
-            bool blink = frame % 22 == 0;
-            foreach (int sx in new[] { -1, 1 })
-            {
-                float ex = cx + sx * rad * 0.38f, ey = cy - rad * 0.08f;
-                if (blink) using (var pen = new Pen(Color.Black, 4)) g.DrawLine(pen, ex - 12, ey, ex + 12, ey);
-                else { g.FillEllipse(Brushes.White, ex - 15, ey - 17, 30, 34); g.FillEllipse(Brushes.Black, ex - 7, ey - 7, 14, 14); }
-            }
-            // cheeks
-            using (var br = new SolidBrush(Color.FromArgb(90, 255, 120, 120))) foreach (int sx in new[] { -1, 1 }) g.FillEllipse(br, cx + sx * rad * 0.6f - 16, cy + rad * 0.2f, 32, 20);
-            // mouth
-            float my = cy + rad * 0.45f;
-            using (var pen = new Pen(Color.FromArgb(120, 30, 30), 5))
-            {
-                if (talking && frame % 2 == 0) { using (var br = new SolidBrush(Color.FromArgb(120, 30, 30))) g.FillEllipse(br, cx - 22, my - 6, 44, 30); }
-                else g.DrawArc(pen, cx - 34, my - 16, 68, 40, 20, 140);
-            }
         }
     }
 
