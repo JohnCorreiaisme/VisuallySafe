@@ -121,6 +121,7 @@ namespace TinyGuard
                     {
                         if (cmd.StartsWith("SAVER")) { if (ScreenSaver.Active) done(); else ScreenSaver.Start(eng, done, SaverPipe.ModeOf(cmd)); }
                         else if (cmd == "SETTINGS") { ShowForm(9); done(); }
+                        else if (cmd == "SHOW") { ShowForm(0); done(); }
                         else if (cmd.StartsWith("SCAN|")) { LogScan("menu", cmd.Substring(5)); eng.ScanNow(cmd.Substring(5)); done(); }
                         else done();
                     }));
@@ -1062,7 +1063,8 @@ namespace TinyGuard
             {
                 if (!mine)
                 {
-                    if (exitAfter == 0)
+                    // already running: just bring its window forward
+                    if (exitAfter == 0 && !SaverPipe.TryClient(dataDir, "SHOW", false))
                         MessageBox.Show("TinyGuard is already running. Look for the shield next to the clock.", "TinyGuard");
                     return 2;
                 }
