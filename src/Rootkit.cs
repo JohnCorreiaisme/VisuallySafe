@@ -97,23 +97,33 @@ namespace TinyGuard
 
         // ------------------------------------------------------------------ run
 
+        public Func<bool> Hold;                 // set by the engine: true while a manual scan is running
+        volatile bool cancel;
+        public void Cancel() { if (Running) cancel = true; }
+        void Check() { if (cancel) throw new OperationCanceledException(); }
+
         public void Run(bool allowNetwork)
         {
             if (Running) return;
-            Running = true;
+            if (Hold != null && Hold()) { Step = "Not started: a scan is running. Try again when it has finished."; return; }
+            Running = true; cancel = false;
             var found = new List<Finding>();
             Drivers = Processes = Entries = 0;
             try
             {
                 Begin(0, "Loading the known-bad driver list…");
-                LoadLol(allowNetwork);
+                LoadLol(allowNetwork); Check();
                 Begin(1, "Checking loaded drivers…");
-                CheckDrivers(found);
+                CheckDrivers(found); Check();
                 Begin(2, "Looking for hidden programs…");
-                CheckHiddenProcesses(found);
+                CheckHiddenProcesses(found); Check();
                 Begin(3, "Checking startup entries and the hosts file…");
                 CheckStartup(found);
                 CheckHosts(found);
+            }
+            catch (OperationCanceledException)
+            {
+                found.Add(new Finding { Sev = Sev.Note, Title = "The check was stopped", Detail = "You stopped it before it finished, so it did not look at everything." });
             }
             catch (Exception ex)
             {

@@ -457,6 +457,7 @@ namespace TinyGuard
         public readonly Btn Quick = new Btn("Quick scan", true);
         public readonly Btn ScanFile = new Btn("Scan a file…");
         public readonly Btn Review = new Btn("Review") { Visible = false };
+        public readonly Btn StopAll = new Btn("Stop all scans") { Visible = false, Danger = true };
         public event Action<ScanRecord> OpenRecord;
         public event Action OpenReview;
         readonly List<Tuple<RectangleF, ScanRecord>> hot = new List<Tuple<RectangleF, ScanRecord>>();
@@ -488,7 +489,8 @@ namespace TinyGuard
             Quick.Bounds = new Rectangle(28, 306, 130, 38);
             ScanFile.Bounds = new Rectangle(170, 306, 130, 38);
             Review.Bounds = new Rectangle(512, 306, 130, 38);
-            Controls.Add(Switch); Controls.Add(Quick); Controls.Add(ScanFile); Controls.Add(Review);
+            StopAll.Bounds = new Rectangle(430, 142, 200, 30);
+            Controls.Add(Switch); Controls.Add(Quick); Controls.Add(ScanFile); Controls.Add(Review); Controls.Add(StopAll);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -515,7 +517,11 @@ namespace TinyGuard
             }
             Theme.Str(g, title, Theme.F(28, true), Theme.Text, new RectangleF(176, 62, 370, 42));
             Theme.Str(g, sub, Theme.F(14), Theme.Muted, new RectangleF(178, 108, 370, 26));
-            if (st == GuardState.Protected)
+            var running = eng.RunningScans();
+            if (StopAll.Visible != (running.Count > 0)) StopAll.Visible = running.Count > 0;
+            if (running.Count > 0)
+                Theme.Str(g, "Scanning now: " + string.Join(", ", running), Theme.F(13, true), Theme.Amber, new RectangleF(178, 134, 250, 24));
+            else if (st == GuardState.Protected)
                 Theme.Str(g, "Programs are checked as they start  ·  network monitor " + (eng.Net != null && eng.Net.Running ? "on" : "off"),
                     Theme.F(13), Theme.Grey, new RectangleF(178, 134, 380, 24));
 
@@ -758,6 +764,7 @@ namespace TinyGuard
             status = new StatusView(eng, () => State);
             status.Switch.Toggled += () => { eng.SetEnabled(!eng.Active); RefreshAll(true); };
             status.Quick.Click += (s, e) => { if (eng.ScanActive) eng.StopScan(); else eng.QuickScan(); RefreshAll(true); };
+            status.StopAll.Click += (s, e) => { eng.StopAllScans(); RefreshAll(true); };
             status.Review.Click += (s, e) => ShowWarning(null);
             status.OpenReview += () => ShowWarning(null);
             status.OpenRecord += r => ShowWarning(r);

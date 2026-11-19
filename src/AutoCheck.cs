@@ -16,17 +16,18 @@ namespace TinyGuard
     /// </summary>
     static class AutoCheck
     {
-        static Engine eng; static volatile bool running;
+        static Engine eng; static volatile bool running, cancel;
         static readonly DateTime started = DateTime.Now;
 
         public static bool Running { get { return running; } }
+        public static void Cancel() { if (running) cancel = true; }
 
         public static void Start(Engine e) { eng = e; }
 
         /// <summary>Called every 30 seconds by the helper.</summary>
         public static void Tick()
         {
-            if (eng == null || running || Helper.Cfg == null || !Helper.Cfg.On || !Helper.Cfg.AutoCheck || ScreenSaver.Active) return;
+            if (eng == null || running || eng.ScanActive || Helper.Cfg == null || !Helper.Cfg.On || !Helper.Cfg.AutoCheck || ScreenSaver.Active) return;
             if ((DateTime.Now - started).TotalMinutes < 3) return;                   // a delayed start: let Windows finish starting up first
             try { if (IdleInfo.FullscreenAppActive()) return; } catch { }
             DateTime last = eng.S.LastAutoCheck > 0 ? new DateTime(eng.S.LastAutoCheck) : DateTime.MinValue;
@@ -40,13 +41,15 @@ namespace TinyGuard
         public static void RunNow(bool manual)
         {
             if (running || eng == null) return;
-            running = true;
+            if (eng.ScanActive) { if (manual) Wizard.Say("A scan is already running, so I will wait until it has finished.", false, null); return; }
+            running = true; cancel = false;
             Task.Run(() =>
             {
                 string summary;
                 try { summary = Run(manual); }
                 catch (Exception ex) { summary = "I tried to check your computer but something went wrong (" + ex.Message + ")."; }
                 finally { running = false; }
+                if (cancel) { cancel = false; Wizard.Say("Okay, I stopped the check.", false, null); return; }
                 eng.S.LastAutoCheck = DateTime.Now.Ticks; eng.S.Save();
                 Wizard.Say(summary, summary.Contains("attention"), null);
             });
@@ -72,7 +75,8 @@ namespace TinyGuard
             foreach (string p in places) eng.ScanNow(p);
             var sw = Stopwatch.StartNew();
             Thread.Sleep(3000);
-            while (sw.Elapsed.TotalMinutes < 25 && places.Any(p => eng.ProgressOf(p) >= 0)) Thread.Sleep(1500);
+            while (!cancel && sw.Elapsed.TotalMinutes < 25 && places.Any(p => eng.ProgressOf(p) >= 0)) Thread.Sleep(1500);
+            if (cancel) return "";
             // 3. what starts with Windows
             var fresh = Persistence.Check(eng, false);
             int after = eng.NeedAttention();

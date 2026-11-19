@@ -148,25 +148,42 @@ namespace TinyGuard
         }
 
         /// <summary>Run Windows' own scan (quick or full) and wait for it. Returns "clean", "threats", "failed" or null if Windows protection is not there.</summary>
+        public static volatile bool Running;
+        static Process scanProc; static volatile bool cancelled;
+
+        /// <summary>Ask Windows to stop the scan TinyGuard started (only that one: it is stopped by its own process, never by name).</summary>
+        public static void CancelScan()
+        {
+            var p = scanProc; string mp = Exe;
+            if (!Running || p == null) return;
+            cancelled = true;
+            try { if (mp != null) Process.Start(new ProcessStartInfo(mp, "-Cancel") { UseShellExecute = false, CreateNoWindow = true }); } catch { }
+            try { p.Kill(); } catch { }
+        }
+
         public static string Scan(bool quick, Action<int> everyMinuteOrSo)
         {
             string mp = Exe; if (mp == null) return null;
+            Running = true; cancelled = false;
             try
             {
                 var psi = new ProcessStartInfo(mp, "-Scan -ScanType " + (quick ? "1" : "2")) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
                 using (var p = Process.Start(psi))
                 {
+                    scanProc = p;
                     p.StandardOutput.ReadToEndAsync(); p.StandardError.ReadToEndAsync();
                     var sw = Stopwatch.StartNew();
-                    while (!p.WaitForExit(90000))
+                    while (!p.WaitForExit(cancelled ? 1000 : 90000))
                     {
                         if (everyMinuteOrSo != null) everyMinuteOrSo((int)sw.Elapsed.TotalMinutes);
                         if (sw.Elapsed.TotalMinutes > 180) { try { p.Kill(); } catch { } return "failed"; }
                     }
+                    if (cancelled) return "stopped";
                     return p.ExitCode == 0 ? "clean" : p.ExitCode == 2 ? "threats" : "failed";
                 }
             }
-            catch { return "failed"; }
+            catch { return cancelled ? "stopped" : "failed"; }
+            finally { scanProc = null; Running = false; }
         }
 
         /// <summary>A threat name from Windows ("Trojan:Win32/Something.A") in plain words.</summary>

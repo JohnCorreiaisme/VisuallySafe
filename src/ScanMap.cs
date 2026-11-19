@@ -667,6 +667,18 @@ namespace TinyGuard
             Theme.FillRound(g, Color.FromArgb(200, 12, 14, 20), new RectangleF(10, 10, Math.Min(W - 20, 12 + head.Length * 6.3f), 24), 8);
             Theme.Str(g, head, Theme.F(12, true), eng.ScanActive ? Theme.Blue : Theme.Text, new RectangleF(18, 10, W - 36, 24));
 
+            if (eng.ScanActive)
+            {
+                int tot = Math.Max(eng.ScanTotal, 1), dn = Math.Min(eng.ScanDone, tot); string cur = eng.ScanCurrent;
+                string txt = (eng.ScanStopped ? "Stopping… " : "Manual scan: ") + dn + " of " + eng.ScanTotal + " files" + (eng.ScanFound > 0 ? " · " + eng.ScanFound + " found" : "") +
+                             (string.IsNullOrEmpty(cur) ? "" : " · " + System.IO.Path.GetFileName(cur));
+                float bw = Math.Min(W - 20, 12 + txt.Length * 6.3f);
+                Theme.FillRound(g, Color.FromArgb(215, 12, 14, 20), new RectangleF(10, 38, bw, 30), 8);
+                Theme.Str(g, txt, Theme.F(12, true), Theme.Blue, new RectangleF(18, 38, W - 36, 24));
+                Theme.FillRound(g, Theme.Card2, new RectangleF(18, 61, bw - 16, 4), 2);
+                Theme.FillRound(g, Theme.Green, new RectangleF(18, 61, Math.Max(4, (bw - 16) * dn / tot), 4), 2);
+            }
+
             var items = new[] { FState.Clean, FState.Unknown, FState.Suspicious, FState.Malicious, FState.Gone, FState.NotScanned };
             string[] names = { "Clean", "Unknown", "Suspicious", "Malware", "Removed", "Not scanned" };
             float x = 14, y = H - 26;

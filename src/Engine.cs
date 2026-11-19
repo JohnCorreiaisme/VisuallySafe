@@ -183,7 +183,7 @@ namespace TinyGuard
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.81";
+        public const string Version = "1.0.82";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -256,7 +256,7 @@ namespace TinyGuard
             S = Settings.Load(dataDir);
             Ai = AiModel.TryLoad(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tinyguard.model"));
             Yara = new Yara(AppDomain.CurrentDomain.BaseDirectory, dataDir);
-            Rootkit = new RootkitCheck(dataDir);
+            Rootkit = new RootkitCheck(dataDir) { Hold = () => ScanActive };
             Tools = new NetTools(dataDir);
             Deep = new DeepScanner(this);
             Shield = new Shields(this);
@@ -669,6 +669,38 @@ namespace TinyGuard
         }
 
         public void StopScan() { if (ScanActive) { scanCancel = true; ScanStopped = true; Bump(); } }
+
+        /// <summary>Everything that is scanning right now, in plain words (the manual scan, the idle deep scan, the rootkit check, Windows' scan, the weekly check).</summary>
+        public List<string> RunningScans()
+        {
+            var l = new List<string>();
+            if (ScanActive) l.Add("quick scan");
+            if (ManualPending > 0) l.Add("file checks");
+            if (Deep != null && Deep.Active) l.Add("deep scan");
+            if (Rootkit != null && Rootkit.Running) l.Add("rootkit check");
+            if (DefenderLink.Running) l.Add("Windows scan");
+            if (AutoCheck.Running) l.Add("weekly check");
+            return l;
+        }
+
+        /// <summary>Stop every scan: the manual one, the queued file checks, the idle deep scan, the rootkit check, Windows' scan and the weekly check.</summary>
+        public void StopAllScans()
+        {
+            StopScan();
+            try { DrainManualQueue(); } catch { }
+            try { if (Deep != null) Deep.SetActive(false); } catch { }
+            try { if (Rootkit != null) Rootkit.Cancel(); } catch { }
+            try { DefenderLink.CancelScan(); } catch { }
+            try { AutoCheck.Cancel(); } catch { }
+            Bump();
+        }
+
+        void DrainManualQueue()
+        {
+            Tuple<string, bool, TaskCompletionSource<bool>> job;
+            while (manualFirst.TryDequeue(out job)) { Interlocked.Decrement(ref manualPending); job.Item3.TrySetResult(true); }
+            while (TryDequeueSecond(out job)) { Interlocked.Decrement(ref manualPending); job.Item3.TrySetResult(true); }
+        }
 
         void FinishScanIfDone()
         {

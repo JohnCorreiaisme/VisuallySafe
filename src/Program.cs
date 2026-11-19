@@ -161,7 +161,7 @@ namespace TinyGuard
             if (form.Visible) form.RefreshAll();
             if ((DateTime.Now - lastNet).TotalMilliseconds >= 950) { lastNet = DateTime.Now; form.RefreshNetwork(); }
             if ((DateTime.Now - lastIdle).TotalSeconds >= 2) { lastIdle = DateTime.Now; try { eng.Shield.Tick(); } catch { } try { CheckIdle(); } catch { } try { SelfUpdate.TrialTick(eng, startedAt); } catch { } }
-            if ((DateTime.Now - lastPersist).TotalMinutes >= 10) { lastPersist = DateTime.Now; System.Threading.Tasks.Task.Run(() => { try { Persistence.Check(eng, true); } catch { } }); }
+            if ((DateTime.Now - lastPersist).TotalMinutes >= 10 && !eng.ScanActive) { lastPersist = DateTime.Now; System.Threading.Tasks.Task.Run(() => { try { Persistence.Check(eng, true); } catch { } }); }
             if (DateTime.Now >= exitAt) Quit();
             if (hot != null && !hot.Ok && (DateTime.Now - lastHot).TotalSeconds >= 5) { lastHot = DateTime.Now; hot.Retry(); LogScan("hotkey", hot.Ok ? "registered" : "Ctrl+Alt+S is taken by another program"); }
         }

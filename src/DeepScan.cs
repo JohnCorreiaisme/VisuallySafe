@@ -266,6 +266,7 @@ namespace TinyGuard
             while (!stop)
             {
                 if (!active) { Thread.Sleep(400); continue; }
+                if (eng.ScanActive) { Thread.Sleep(1000); continue; }            // a manual scan has the machine: wait
                 if (queue.Count == 0)
                 {
                     Phase = "Listing files…";

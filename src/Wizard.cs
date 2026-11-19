@@ -958,6 +958,7 @@ namespace TinyGuard
         public static string ScanComputer()
         {
             if (!DefenderLink.Available) return "I cannot find Windows' own protection, so I cannot start its scan. Please ask " + Who + ".";
+            if (eng.ScanActive) return "A scan is already running, so I will not start another one. When it finishes, ask me again.";
             Cast(3.2);
             Task.Run(() => ScanComputerCore());
             return "I asked Windows to scan your computer. This takes a few minutes, and your computer keeps working while it runs. I will tell you when it is done.";
@@ -978,6 +979,7 @@ namespace TinyGuard
                     Say("Windows finished scanning and found " + what + ". It has dealt with what it could. Please ask " + Who + " to take a look.", true, null);
                     Helper.Notify("Windows protection found something on " + Environment.MachineName, "A scan found: " + string.Join(", ", h.Active) + ".");
                 }
+                else if (r == "stopped") Say("Okay, I stopped the Windows scan.", false, null);
                 else Say("I could not finish the Windows scan. Please ask " + Who + " to take a look.", true, null);
             }
             finally { defScanning = 0; }
@@ -1044,7 +1046,7 @@ namespace TinyGuard
         public static void CheckDesktop()
         {
             Cast(3.2);
-            foreach (string f in DesktopItems()) try { eng.ScanNow(f); } catch { }
+            if (!eng.ScanActive) foreach (string f in DesktopItems()) try { eng.ScanNow(f); } catch { }
         }
 
         // ------------------------------------------------------------ answers
