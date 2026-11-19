@@ -107,6 +107,7 @@ namespace TinyGuard
             Helper.Start(eng);
             SelfUpdateForm.RestartRequested += () => Quit();
             ScanGlow.Init(eng);
+            System.Threading.Tasks.Task.Run(() => { System.Threading.Thread.Sleep(30000); try { eng.RecheckWarnings(); } catch { } });     // warnings that Windows' protection finds nothing wrong with are dropped
             ShellMenu.Apply(eng);
             SaverPipe.StartServer(eng.DataDir, (cmd, done) =>
             {

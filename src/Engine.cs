@@ -183,7 +183,7 @@ namespace TinyGuard
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.82";
+        public const string Version = "1.0.83";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -598,7 +598,42 @@ namespace TinyGuard
             if (!Hash(path, out sha, out md5, out isPe, out entropy)) return null;
             var rec = new ScanRecord { Time = DateTime.Now, FilePath = path, Sha256 = sha };
             Classify(rec, md5, isPe, entropy);
+            if (rec.Verdict == Verdict.Suspicious) AskDefender(rec);
             return rec;
+        }
+
+        static bool WeakGuess(string detail)
+        {
+            detail = detail ?? "";
+            return !detail.StartsWith("YARA rule", StringComparison.OrdinalIgnoreCase) && !detail.StartsWith("Flagged by you", StringComparison.OrdinalIgnoreCase)
+                && detail.IndexOf("Defender suspects", StringComparison.OrdinalIgnoreCase) < 0 && !detail.StartsWith("Microsoft Defender:", StringComparison.OrdinalIgnoreCase)
+                && detail.IndexOf("Listed as malware", StringComparison.OrdinalIgnoreCase) < 0;
+        }
+
+        /// <summary>Ask Windows' protection about the warnings already listed: where it finds nothing, TinyGuard's own guess is dropped.</summary>
+        public void RecheckWarnings()
+        {
+            if (!S.UseDefender || !DefenderLink.Available) return;
+            var paths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);     // path -> detail
+            lock (gate)
+                foreach (var h in history)
+                    if (h.Verdict == Verdict.Suspicious && !h.Quarantined && WeakGuess(h.Detail) && File.Exists(h.FilePath)) paths[h.FilePath] = h.Detail;
+            foreach (var kv in LedgerSnapshot())
+                if (kv.Value.Verdict == Verdict.Suspicious && !kv.Value.Quarantined && !kv.Value.Deleted && WeakGuess(kv.Value.Detail) && File.Exists(kv.Key)) paths[kv.Key] = kv.Value.Detail;
+            bool changed = false;
+            foreach (var kv in paths)
+            {
+                if (ScanActive || disposed) break;
+                DefenderLink.Answer a = null;
+                try { a = DefenderLink.Check(kv.Key); } catch { }
+                if (a == null || a.Threat) continue;
+                string detail = "Microsoft Defender: no threat found (TinyGuard's guess was: " + kv.Value + ")";
+                lock (gate)
+                    foreach (var h in history.Where(h => string.Equals(h.FilePath, kv.Key, StringComparison.OrdinalIgnoreCase) && !h.Quarantined && h.Verdict == Verdict.Suspicious)) { h.Verdict = Verdict.Unknown; h.Detail = detail; }
+                Ledger(kv.Key, Verdict.Unknown, false, false, detail);
+                changed = true;
+            }
+            if (changed) { lock (gate) SaveHistory(); lock (folderLock) { LoadFolderScans(); RejudgeFolders(); } Bump(); }
         }
 
         public void CommitDeepEntry(string path, Verdict v, string detail) { Ledger(path, v, false, false, detail, true); Bump(); }
@@ -921,7 +956,12 @@ namespace TinyGuard
                 }
             }
             catch { }
-            // a folder flagged in the past is re-judged from what its files say now
+            RejudgeFolders();
+        }
+
+        // a folder flagged in the past is re-judged from what its files say now
+        void RejudgeFolders()
+        {
             try
             {
                 var snap = LedgerSnapshot();
@@ -933,6 +973,7 @@ namespace TinyGuard
                         if (kv.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase)) { var v = kv.Value.Quarantined || kv.Value.Deleted ? Verdict.Malicious : kv.Value.Verdict; if (v > worst && v >= Verdict.Suspicious) worst = v; }
                     if (worst < folderScans[k].Item2) folderScans[k] = Tuple.Create(folderScans[k].Item1, worst);
                 }
+                File.WriteAllLines(FolderScanFile, folderScans.Select(kv => kv.Key + (char)9 + kv.Value.Item1.Ticks + (char)9 + (int)kv.Value.Item2).ToArray());
             }
             catch { }
         }
@@ -1135,7 +1176,7 @@ namespace TinyGuard
 
             var rec = new ScanRecord { Time = DateTime.Now, FilePath = path, Sha256 = sha };
             Classify(rec, md5, isPe, entropy);
-            if (manual) AskDefender(rec);
+            if (manual || rec.Verdict == Verdict.Suspicious) AskDefender(rec);
             SetProg(path, 0.97);
             Ledger(rec);
 
@@ -1156,12 +1197,20 @@ namespace TinyGuard
         // Microsoft Defender gets a say on files you scan that nothing else has vouched for. Report only: Defender removes nothing for us.
         void AskDefender(ScanRecord rec)
         {
-            if (!S.UseDefender || !S.Cloud || rec.Verdict >= Verdict.Malicious) return;
+            if (!S.UseDefender || rec.Verdict >= Verdict.Malicious) return;
             if (rec.Verdict != Verdict.Unknown && rec.Verdict != Verdict.Suspicious) return;     // signed or already-known-good files need no second opinion
+            if (rec.Verdict == Verdict.Unknown && !S.Cloud) return;
             try { if (rec.FilePath.StartsWith(AppDomain.CurrentDomain.BaseDirectory, StringComparison.OrdinalIgnoreCase)) return; } catch { }     // never judge ourselves: Defender has mislabelled TinyGuard before
             var a = DefenderLink.Check(rec.FilePath);
             if (a == null) return;
-            if (!a.Threat) { rec.Detail += " · Microsoft Defender: no threat found"; return; }
+            if (!a.Threat)
+            {
+                // TinyGuard's own guess (AI or how the file looks) is overruled when Windows' protection finds nothing. A YARA rule match stays a warning.
+                if (rec.Verdict == Verdict.Suspicious && !rec.Detail.StartsWith("YARA rule", StringComparison.OrdinalIgnoreCase))
+                { rec.Detail = "Microsoft Defender: no threat found (TinyGuard's guess was: " + rec.Detail + ")"; rec.Verdict = Verdict.Unknown; }
+                else rec.Detail += " · Microsoft Defender: no threat found";
+                return;
+            }
             string name = a.Name.Length > 0 ? a.Name : "a threat";
             if (a.Ml) { rec.Verdict = Verdict.Suspicious; rec.Detail = "Microsoft Defender suspects " + name + " (a machine-guess, so unconfirmed)"; }
             else { rec.Verdict = Verdict.Malicious; rec.Detail = "Microsoft Defender: " + name; }
@@ -1199,6 +1248,7 @@ namespace TinyGuard
             if (!Hash(path, out sha, out md5, out isPe, out entropy)) return;
             var rec = new ScanRecord { Time = DateTime.Now, FilePath = path, Sha256 = sha };
             Classify(rec, md5, isPe, entropy);
+            if (rec.Verdict == Verdict.Suspicious) AskDefender(rec);
             Ledger(rec);
             lock (gate)
             {
