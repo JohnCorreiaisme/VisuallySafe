@@ -74,6 +74,7 @@ namespace TinyGuard
                 new ToolStripMenuItem("Update TinyGuard with AI…", null, (s, e) => { var f = new SelfUpdateForm(eng); f.Show(); f.Activate(); }),
                 new ToolStripMenuItem("Microsoft Defender: status", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.StatusText()).ContinueWith(t => tray.ShowBalloonTip(9000, "Microsoft Defender", t.Result, ToolTipIcon.Info))),
                 new ToolStripMenuItem("Microsoft Defender: update definitions now", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.UpdateSignatures()).ContinueWith(t => tray.ShowBalloonTip(6000, "Microsoft Defender", t.Result != null ? "Definitions are up to date." : "Could not update them just now.", ToolTipIcon.Info))),
+                new ToolStripMenuItem("Support TinyGuard (Ko-fi)", null, (s, e) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } }),
                 new ToolStripMenuItem("Family helper mode…", null, (s, e) => { var f = new HelperSetupForm(eng); f.Show(); f.Activate(); }),
                 new ToolStripSeparator(),
                 mStartup,

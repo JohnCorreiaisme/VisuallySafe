@@ -355,6 +355,9 @@ namespace TinyGuardSetup
             lDoneBody = L(p, "", 44, 100, 770, 220, 22, false, Soft);
             cLaunch = new CheckBox { Text = "Start TinyGuard now (the wizard will say hello)", Left = 44, Top = 360, Width = 770, Height = 36, Font = F(21), Checked = true };
             p.Controls.Add(cLaunch);
+            var support = new LinkLabel { Text = "Free and open source. Say thanks on Ko-fi (optional)", Left = 44, Top = 420, Width = 770, Height = 30, Font = F(19), LinkColor = Blue };
+            support.LinkClicked += (s, e) => { try { Process.Start(new ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } };
+            p.Controls.Add(support);
             bAgain = Btn("Try again", 400, 520, 220, Blue); bAgain.Visible = false; bAgain.Click += (s, e) => Show(2);
             Controls.Add(bAgain);
         }

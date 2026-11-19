@@ -144,6 +144,7 @@ namespace TinyGuard
             var menu = Menus.Make();
             menu.Items.Add("Ask the wizard…", null, (s, e) => Wizard.OpenAsk());
             menu.Items.Add("What do the boxes mean?", null, (s, e) => Wizard.Say(Wizard.BoxesText(), false, null));
+            menu.Items.Add("Support TinyGuard (Ko-fi)", null, (s, e) => { try { Process.Start(new ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } });
             menu.Items.Add("Close the wizard (Alt+click)", null, (s, e) => Wizard.Dismiss());
             menu.Items.Add("Let the wizard rest for an hour", null, (s, e) => { RestUntil = DateTime.Now.AddHours(1); Hide(); });
             ContextMenuStrip = menu;

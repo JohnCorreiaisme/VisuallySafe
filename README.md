@@ -23,6 +23,12 @@ Windows may show "Windows protected your PC" because the installer is new and no
 
 Build the installer yourself with `python tools/build_setup.py` (needs the .NET SDK). It writes `dist/TinyGuardSetup-<version>.exe`.
 
+## Support
+
+TinyGuard is free. If it helps someone you care about and you would like to say thanks, you can [buy me a coffee on Ko-fi](https://ko-fi.com/johncorreia9791). Donations are never required and unlock nothing.
+
+[![Support TinyGuard on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/johncorreia9791)
+
 ## Credits
 
 The wizard character was made with Nano Banana and Tripo.
