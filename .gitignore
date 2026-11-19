@@ -1,0 +1,13 @@
+bin_new/
+obj/
+shots/
+*.user
+.vs/
+# the installed copy; the model and YARA engine are kept below
+bin/*
+!bin/tinyguard.model
+dist/
+installer/payload.zip
+installer/obj/
+art/*.blend
+art/*.blend1
