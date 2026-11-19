@@ -457,6 +457,29 @@ namespace TinyGuard
         public readonly Btn Quick = new Btn("Quick scan", true);
         public readonly Btn ScanFile = new Btn("Scan a file…");
         public readonly Btn Review = new Btn("Review") { Visible = false };
+        public event Action<ScanRecord> OpenRecord;
+        public event Action OpenReview;
+        readonly List<Tuple<RectangleF, ScanRecord>> hot = new List<Tuple<RectangleF, ScanRecord>>();
+        RectangleF attentionBox = new RectangleF(318, 300, 190, 50), heroBox = new RectangleF(28, 24, 614, 160);
+
+        Tuple<RectangleF, ScanRecord> HotAt(Point pt)
+        {
+            float x = pt.X / Theme.K, y = pt.Y / Theme.K;
+            foreach (var h in hot) if (h.Item1.Contains(x, y)) return h;
+            if (eng.NeedAttention() > 0 && !eng.ScanActive && (attentionBox.Contains(x, y) || heroBox.Contains(x, y))) return Tuple.Create(attentionBox, (ScanRecord)null);
+            return null;
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e) { base.OnMouseMove(e); Cursor = HotAt(e.Location) != null ? Cursors.Hand : Cursors.Default; }
+
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            base.OnMouseClick(e);
+            var h = HotAt(e.Location);
+            if (h == null) return;
+            if (h.Item2 != null) { if (OpenRecord != null) OpenRecord(h.Item2); }
+            else if (OpenReview != null) OpenReview();
+        }
 
         public StatusView(Engine eng, Func<GuardState> state)
         {
@@ -522,7 +545,10 @@ namespace TinyGuard
                 if (!string.IsNullOrEmpty(cur)) Theme.Str(g, Path.GetFileName(cur), Theme.F(11), Theme.Muted, new RectangleF(318, 340, 324, 18));
             }
             else if (attention > 0)
-                Theme.Str(g, attention + (attention == 1 ? " file needs" : " files need") + " attention", Theme.F(13, true), Theme.Amber, new RectangleF(318, 306, 190, 38));
+            {
+                Theme.Str(g, attention + (attention == 1 ? " file needs" : " files need") + " attention", Theme.F(13, true), Theme.Amber, new RectangleF(318, 300, 190, 24));
+                Theme.Str(g, "Click to see why", Theme.F(11), Theme.Muted, new RectangleF(318, 324, 190, 20));
+            }
             else if (eng.ScanEnded != DateTime.MinValue)
                 Theme.Str(g, (eng.ScanStopped ? "Scan stopped" : "Scan finished") + ": " + eng.ScanDone + " files checked, nothing wrong found",
                     Theme.F(13), Theme.Muted, new RectangleF(318, 306, 324, 38));
@@ -532,6 +558,7 @@ namespace TinyGuard
             Theme.FillRound(g, Theme.Card, new RectangleF(28, 362, 614, 174), 14);
             Theme.Str(g, "Latest checks", Theme.F(14, true), Theme.Text, new RectangleF(46, 372, 300, 28));
             var recent = eng.Snapshot().Take(4).ToList();
+            hot.Clear();
             if (recent.Count == 0)
                 Theme.Str(g, "Nothing yet. New programs and scripts in your watched folders will show up here.",
                     Theme.F(13), Theme.Muted, new RectangleF(46, 420, 580, 30));
@@ -539,9 +566,12 @@ namespace TinyGuard
             {
                 var r = recent[i];
                 float y = 406 + i * 31;
+                bool warn = r.IsThreat && !r.Quarantined;
+                if (warn) hot.Add(Tuple.Create(new RectangleF(40, y, 590, 30), r));
                 using (var b = new SolidBrush(Theme.Of(r.Verdict))) g.FillEllipse(b, 48, y + 10, 9, 9);
-                Theme.Str(g, r.Name, Theme.F(13), Theme.Text, new RectangleF(68, y, 300, 30));
-                Theme.Str(g, Theme.Label(r.Verdict) + (r.Quarantined ? " · quarantined" : ""), Theme.F(13), Theme.Of(r.Verdict), new RectangleF(374, y, 170, 30));
+                Theme.Str(g, r.Name, Theme.F(13), Theme.Text, new RectangleF(68, y, warn ? 200 : 300, 30));
+                if (warn) Theme.Str(g, Theme.Label(r.Verdict) + " · " + r.Detail, Theme.F(12), Theme.Of(r.Verdict), new RectangleF(272, y, 266, 30));
+                else Theme.Str(g, Theme.Label(r.Verdict) + (r.Quarantined ? " · quarantined" : ""), Theme.F(13), Theme.Of(r.Verdict), new RectangleF(374, y, 170, 30));
                 Theme.Str(g, When(r.Time), Theme.F(12), Theme.Muted, new RectangleF(540, y, 86, 30), StringAlignment.Far);
             }
         }
@@ -676,6 +706,7 @@ namespace TinyGuard
             bShow = new Btn("Show in folder"), bLookup = new Btn("Look up online"), bQuarAll = new Btn("Quarantine all", true);
         readonly Btn bDeleteAll = new Btn("Delete all") { Danger = true }, bQLookup = new Btn("Look up online");
         readonly QuarDetailView qdetail = new QuarDetailView();
+        readonly DetailView wdetail = new DetailView();
         Panel quarPage;
         readonly DetailView detail = new DetailView();
         readonly Btn bRestore = new Btn("Restore"), bDelete = new Btn("Delete forever") { Danger = true };
@@ -727,7 +758,9 @@ namespace TinyGuard
             status = new StatusView(eng, () => State);
             status.Switch.Toggled += () => { eng.SetEnabled(!eng.Active); RefreshAll(true); };
             status.Quick.Click += (s, e) => { if (eng.ScanActive) eng.StopScan(); else eng.QuickScan(); RefreshAll(true); };
-            status.Review.Click += (s, e) => SelectPage(1);
+            status.Review.Click += (s, e) => ShowWarning(null);
+            status.OpenReview += () => ShowWarning(null);
+            status.OpenRecord += r => ShowWarning(r);
             status.ScanFile.Click += (s, e) => { if (ScanFileRequested != null) ScanFileRequested(); };
             pages[0] = status;
 
@@ -765,7 +798,7 @@ namespace TinyGuard
             var menu = Menus.Make();
             var mQuar = new ToolStripMenuItem("Quarantine (lock it away)", null, (s, e) => ActQuarantine());
             var mDel = new ToolStripMenuItem("Delete permanently…", null, (s, e) => ActDelete());
-            var mSafe = new ToolStripMenuItem("Mark as safe", null, (s, e) => ActSafe());
+            var mSafe = new ToolStripMenuItem("Mark as safe / flag it", null, (s, e) => ActSafe());
             var mShow = new ToolStripMenuItem("Show in folder", null, (s, e) => ActShow());
             var mLook = new ToolStripMenuItem("Look up online", null, (s, e) => ActLookup(activity.SelectedItem is ScanRecord lr ? lr.Sha256 : null));
             var mCopy = new ToolStripMenuItem("Copy path", null, (s, e) => { if (activity.SelectedItem is ScanRecord cr) try { Clipboard.SetText(cr.FilePath); } catch { } });
@@ -788,16 +821,16 @@ namespace TinyGuard
 
 
             // ----- Quarantine -----
-            var pq = Page("Quarantine", "Files locked away where they can't run. Alt+click one for properties and an AI fix.");
+            var pq = Page("Quarantine and warnings", "Warnings first, then files locked away where they can't run. Mark a warning safe, or flag it again later.");
             quarPage = pq;
             quar.Bounds = new Rectangle(28, 84, 614, 242);
             quar.Painter = PaintQuarantine;
             quar.SelectedIndexChanged += (s, e) => UpdateButtons();
             var qmenu = Menus.Make();
             qmenu.Items.Add("Properties and AI fix…  (Alt+click)", null, (s, e) => ActPropertiesQuarantined());
-            qmenu.Items.Add("Restore", null, (s, e) => ActRestore());
+            qmenu.Items.Add("Restore / mark as safe", null, (s, e) => ActRestore());
             qmenu.Items.Add("Delete forever…", null, (s, e) => ActDeleteQuarantined(false));
-            qmenu.Opening += (s, e) => { if (!(quar.SelectedItem is QuarantineItem)) e.Cancel = true; };
+            qmenu.Opening += (s, e) => { if (!(quar.SelectedItem is QuarantineItem) && !(quar.SelectedItem is ScanRecord)) e.Cancel = true; };
             quar.ContextMenuStrip = qmenu;
             quar.MouseDown += (s, e) => { if (e.Button == MouseButtons.Right) { int at = quar.IndexFromPoint(e.Location); if (at >= 0) quar.SelectedIndex = at; } };
             quar.MouseDown += (s, e) =>
@@ -806,17 +839,18 @@ namespace TinyGuard
                 int i = quar.IndexFromPoint(e.Location);
                 if (i >= 0) { quar.SelectedIndex = i; ActPropertiesQuarantined(); }
             };
-            quarEmpty = Empty("Quarantine is empty. Files TinyGuard locks away will appear here.", new Rectangle(28, 84, 614, 396));
+            quarEmpty = Empty("No warnings and nothing in quarantine. Files TinyGuard flags or locks away will appear here.", new Rectangle(28, 84, 614, 396));
             qdetail.Bounds = new Rectangle(28, 334, 614, 154);
             bRestore.Bounds = new Rectangle(28, 498, 112, 36);
             bDelete.Bounds = new Rectangle(148, 498, 150, 36);
             bDeleteAll.Bounds = new Rectangle(306, 498, 140, 36);
             bQLookup.Bounds = new Rectangle(454, 498, 138, 36);
             bRestore.Click += (s, e) => ActRestore();
-            bDelete.Click += (s, e) => ActDeleteQuarantined(false);
-            bDeleteAll.Click += (s, e) => ActDeleteQuarantined(true);
-            bQLookup.Click += (s, e) => ActLookup(quar.SelectedItem is QuarantineItem lq ? lq.Sha256 : null);
-            pq.Controls.AddRange(new Control[] { quar, quarEmpty, qdetail, bRestore, bDelete, bDeleteAll, bQLookup });
+            bDelete.Click += (s, e) => { if (quar.SelectedItem is ScanRecord) { WarnTo(); ActDelete(); } else ActDeleteQuarantined(false); };
+            bDeleteAll.Click += (s, e) => { if (quar.SelectedItem is ScanRecord) { WarnTo(); ActQuarantine(); } else ActDeleteQuarantined(true); };
+            bQLookup.Click += (s, e) => ActLookup(quar.SelectedItem is QuarantineItem lq ? lq.Sha256 : quar.SelectedItem is ScanRecord lw ? lw.Sha256 : null);
+            wdetail.Bounds = qdetail.Bounds; wdetail.Visible = false;
+            pq.Controls.AddRange(new Control[] { quar, quarEmpty, qdetail, wdetail, bRestore, bDelete, bDeleteAll, bQLookup });
             pages[8] = pq;
 
             // ----- Settings -----
@@ -1047,7 +1081,7 @@ namespace TinyGuard
         void ActSafe()
         {
             if (!(activity.SelectedItem is ScanRecord r)) return;
-            eng.MarkSafe(r);
+            if (r.Verdict == Verdict.Clean) eng.Flag(r); else eng.MarkSafe(r);
             RefreshAll(true);
         }
 
@@ -1096,8 +1130,31 @@ namespace TinyGuard
             RefreshAll(true);
         }
 
+        // the warnings share the Activity actions: point them at the warning picked on the Quarantine page
+        void WarnTo()
+        {
+            var w = quar.SelectedItem as ScanRecord; if (w == null) return;
+            for (int k = 0; k < activity.Items.Count; k++) if (ReferenceEquals(activity.Items[k], w)) { activity.SelectedIndex = k; break; }
+        }
+
+        /// <summary>Open the warnings page, with the given warning (or the first one) selected.</summary>
+        void ShowWarning(ScanRecord r)
+        {
+            SelectPage(8);
+            for (int k = 0; k < quar.Items.Count; k++)
+            {
+                var w = quar.Items[k] as ScanRecord;
+                if (w != null && (r == null || ReferenceEquals(w, r) || w.FilePath == r.FilePath)) { quar.SelectedIndex = k; break; }
+            }
+        }
+
         void ActRestore()
         {
+            if (quar.SelectedItem is ScanRecord w)
+            {
+                if (w.Verdict == Verdict.Clean) eng.Flag(w); else eng.MarkSafe(w);
+                RefreshAll(true); return;
+            }
             if (!(quar.SelectedItem is QuarantineItem q)) return;
             if (MessageBox.Show(this, "Put \"" + q.Name + "\" back where it was?\n\nTinyGuard will treat this file as safe from now on. Only do this if you're sure it was a false alarm.",
                     "Restore file", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
@@ -1152,6 +1209,7 @@ namespace TinyGuard
 
         void PaintQuarantine(Graphics g, object item, RectangleF r, bool sel)
         {
+            if (item is ScanRecord) { PaintRecord(g, item, r, sel); return; }
             var q = (QuarantineItem)item;
             using (var b = new SolidBrush(sel ? Theme.Card2 : Theme.Bg)) g.FillRectangle(b, r);
             using (var b = new SolidBrush(Theme.Red)) g.FillEllipse(b, 12, 20, 11, 11);
@@ -1173,7 +1231,7 @@ namespace TinyGuard
                     if (activity.Items[k] is ScanRecord sr && sr.IsThreat && !sr.Quarantined) { activity.SelectedIndex = k; break; }
             if (pages[i] == quarPage && quar.SelectedIndex < 0 && quar.Items.Count > 0) quar.SelectedIndex = 0;
             if (i == 2) network.RefreshNow();
-            if (i == 1 && Alert) { Alert = false; if (AlertSeen != null) AlertSeen(); }
+            if ((i == 1 || i == 8) && Alert) { Alert = false; if (AlertSeen != null) AlertSeen(); }
             RefreshAll(true);
         }
 
@@ -1183,14 +1241,22 @@ namespace TinyGuard
             bool there = r != null && File.Exists(r.FilePath);
             bQuar.Enabled = r != null && !r.Quarantined && r.Verdict >= Verdict.Unknown && there;
             bDeleteFile.Enabled = r != null && !r.Quarantined && there;
-            bSafe.Enabled = r != null && !r.Quarantined && r.Verdict >= Verdict.Unknown;
+            bSafe.Enabled = r != null && !r.Quarantined;
+            bSafe.Text = r != null && r.Verdict == Verdict.Clean ? "Flag it" : "Mark as safe"; bSafe.Invalidate();
             bIgnore.Enabled = r != null && !r.Quarantined;
             bShow.Enabled = r != null && !r.Quarantined && there;
             bLookup.Enabled = r != null && r.Sha256.Length == 64;
             detail.Rec = r; detail.Invalidate();
             var qi = quar.SelectedItem as QuarantineItem;
-            bRestore.Enabled = bDelete.Enabled = bQLookup.Enabled = qi != null;
-            bDeleteAll.Enabled = quar.Items.Count > 0;
+            var wi = quar.SelectedItem as ScanRecord;
+            bRestore.Enabled = bDelete.Enabled = bQLookup.Enabled = qi != null || wi != null;
+            bRestore.Text = wi != null ? (wi.Verdict == Verdict.Clean ? "Flag it" : "Mark as safe") : "Restore";
+            bDelete.Text = wi != null ? "Delete file" : "Delete forever";
+            bDeleteAll.Text = wi != null ? "Quarantine it" : "Delete all";
+            bDeleteAll.Enabled = wi != null ? File.Exists(wi.FilePath) : quar.Items.Count > 0;
+            bRestore.Invalidate(); bDelete.Invalidate(); bDeleteAll.Invalidate();
+            qdetail.Visible = qi != null && quar.Visible; wdetail.Visible = wi != null && quar.Visible;
+            wdetail.Rec = wi; wdetail.Invalidate();
             qdetail.Item = qi; qdetail.Invalidate();
         }
 
@@ -1215,8 +1281,11 @@ namespace TinyGuard
             activity.Fill(recs);
             activity.Visible = recs.Count > 0; activityEmpty.Visible = recs.Count == 0;
             var qs = eng.QuarantineSnapshot();
-            quar.Fill(qs);
-            quar.Visible = qs.Count > 0; quarEmpty.Visible = qs.Count == 0; qdetail.Visible = qs.Count > 0;
+            var qall = new List<object>();
+            qall.AddRange(recs.Where(x => x.IsThreat && !x.Quarantined && File.Exists(x.FilePath)).Cast<object>());
+            qall.AddRange(qs.Cast<object>());
+            quar.Fill(qall);
+            quar.Visible = qall.Count > 0; quarEmpty.Visible = qall.Count == 0;
             if (pages[CurrentPage] == quarPage && quar.SelectedIndex < 0 && quar.Items.Count > 0) quar.SelectedIndex = 0;
             int need = eng.NeedAttention();
             bQuarAll.Visible = need > 0;

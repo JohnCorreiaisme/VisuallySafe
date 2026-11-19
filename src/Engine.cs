@@ -183,7 +183,7 @@ namespace TinyGuard
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.80";
+        public const string Version = "1.0.81";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -1529,6 +1529,21 @@ namespace TinyGuard
                 SaveHistory();
             }
             Ledger(r.FilePath, Verdict.Clean, false, false, "Marked safe by you");
+            Bump();
+        }
+
+        /// <summary>Flag a file as suspicious by hand (the opposite of Mark as safe).</summary>
+        public void Flag(ScanRecord r)
+        {
+            lock (gate)
+            {
+                allowed.Remove(r.Sha256);
+                File.WriteAllLines(AllowFile, allowed);
+                foreach (var h in history.Where(h => h.Sha256 == r.Sha256 && !h.Quarantined))
+                { h.Verdict = Verdict.Suspicious; h.Detail = "Flagged by you"; }
+                SaveHistory();
+            }
+            Ledger(r.FilePath, Verdict.Suspicious, false, false, "Flagged by you");
             Bump();
         }
 
