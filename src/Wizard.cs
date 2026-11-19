@@ -727,6 +727,13 @@ namespace TinyGuard
         public static string Who { get { return Helper.Cfg != null ? Helper.Cfg.Name : "your family"; } }
         public static bool Enabled { get { WizardSprites.Load(); return Helper.Cfg != null && !Dismissed && !Asleep && (Forced || Helper.Cfg.Wizard) && WizardSprites.Ok; } }
 
+        /// <summary>Bring him out on the screen, without opening the question window.</summary>
+        public static void Appear()
+        {
+            if (sync == null) return;
+            sync.BeginInvoke(new Action(() => { Dismissed = false; Forced = true; if (Helper.Cfg != null) Helper.Cfg.SleepUntil = 0; Sync(); if (form != null) form.WaveUntil = DateTime.Now.AddSeconds(3); }));
+        }
+
         /// <summary>The big button: bring the wizard out and open the question window.</summary>
         public static void Summon()
         {
@@ -753,7 +760,7 @@ namespace TinyGuard
         public static void Sync()
         {
             if (sync == null) return;
-            if (Enabled && form == null) { form = new WizardForm(); form.FormClosed += (s, e) => form = null; form.Show(); form.WaveUntil = DateTime.Now.AddSeconds(4); }
+            if (Enabled && form == null) { form = new WizardForm(); form.FormClosed += (s, e) => form = null; form.Show(); form.WaveUntil = DateTime.Now.AddSeconds(4); if (queue.Count > 0 && (bubble == null || bubble.IsDisposed)) Next(); }
             else if (!Enabled && form != null) { form.Close(); form = null; }
         }
 

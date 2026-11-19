@@ -719,25 +719,6 @@ namespace TinyGuard
                 return 0;
             }
 
-            if (Arg(args, "--helper-shot") != null)   // developer aid: pictures of the family helper bubbles (no voice, no email)
-            {
-                string od = Arg(args, "--helper-shot"); Helper.DryRun = true;
-                Helper.Cfg = new HelperConfig { Name = "Sam" };
-                var cases = new[] {
-                    new[] { "hello", "Hello! Sam asked me to watch over your computer. If anything looks wrong, please contact Sam.", "", "1" },
-                    new[] { "network", "Your computer is not connected to the internet. Please plug in the network cable, or turn on your wireless connection. If you can't, please contact Sam.", "", "1" },
-                    new[] { "textfiles", "Sam wants me to be sure you're not filling up the C drive with unnamed text files. You have 37 of them. Please ask Sam to help you tidy up.", "", "1" },
-                    new[] { "code", "Please read this code to Sam:", "482 915", "" } };
-                foreach (var c in cases)
-                {
-                    var b = Helper.Preview(c[1], c[3] == "1", c[2].Length > 0 ? c[2] : null);
-                    b.StartPosition = FormStartPosition.Manual; b.Location = new System.Drawing.Point(-4000, -4000); b.Show();
-                    for (int i = 0; i < 6; i++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); }
-                    using (var bmp = new System.Drawing.Bitmap(b.Width, b.Height)) { b.DrawToBitmap(bmp, new System.Drawing.Rectangle(0, 0, b.Width, b.Height)); bmp.Save(Path.Combine(od, "helper-" + c[0] + ".png"), System.Drawing.Imaging.ImageFormat.Png); }
-                    b.Close();
-                }
-                return 0;
-            }
             string stArg = Arg(args, "--selftest");   // used by the AI update: run the safety checks and write the results to a file
             if (stArg != null) return SelfUpdate.SelfTest(stArg);
             if (Arg(args, "--update-test") != null)   // developer aid: run the update pipeline on a harmless fake edit (never installs)

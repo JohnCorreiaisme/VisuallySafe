@@ -81,8 +81,6 @@ namespace TinyGuard
         static System.Windows.Forms.Timer timer;
         static readonly Dictionary<string, DateTime> said = new Dictionary<string, DateTime>();
         static int offlineStreak;
-        static readonly Queue<Action> waiting = new Queue<Action>();
-        static HelperBubble current;
         public static bool DryRun;   // pictures only: no voice, no emails
 
         public static void Start(Engine e)
@@ -198,24 +196,16 @@ namespace TinyGuard
 
         // ---------------------------------------------------------------- showing the helper
 
+        /// <summary>Everything is said by the wizard. If he is asleep or turned off, nothing pops up, except a remote-help code, which has to be shown: that brings him out.</summary>
         public static void Say(string text, bool withHelpButton, string code = null, Action extra = null)
         {
-            if (Wizard.Asleep) return;                                           // he is asleep: nothing pops up
-            if (!DryRun && Wizard.Enabled) { Wizard.Say(text, withHelpButton, code); return; }
-            if (current != null && !current.IsDisposed) { waiting.Enqueue(() => Say(text, withHelpButton, code, extra)); return; }
-            var b = new HelperBubble(text, withHelpButton, code, !DryRun);
-            current = b;
-            b.FormClosed += (s, e) =>
+            if (Wizard.Asleep && code == null) return;
+            if (!Wizard.Enabled)
             {
-                current = null;
-                if (waiting.Count > 0) { var next = waiting.Dequeue(); sync.BeginInvoke(next); }
-            };
-            b.Show();
-        }
-
-        public static HelperBubble Preview(string text, bool help, string code)
-        {
-            return new HelperBubble(text, help, code, false);
+                if (code == null) return;
+                Wizard.Appear();                                                  // he appears just to show the code
+            }
+            Wizard.Say(text, withHelpButton, code);
         }
 
         // ---------------------------------------------------------------- remote help
@@ -298,109 +288,6 @@ namespace TinyGuard
         }
     }
 
-    /// <summary>The big, friendly speech bubble with a face. High contrast and large text so it is easy to read.</summary>
-    class HelperBubble : Form
-    {
-        readonly string text, code;
-        readonly bool speak;
-        System.Speech.Synthesis.SpeechSynthesizer voice;
-        System.Windows.Forms.Timer auto;
-        readonly Button bOk, bHelp;
-
-        static Font Px(float px, FontStyle st) { return new Font("Segoe UI", px, st, GraphicsUnit.Pixel); }
-
-        public HelperBubble(string text, bool help, string code, bool speak)
-        {
-            this.text = text; this.code = code; this.speak = speak;
-            FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false; TopMost = true; StartPosition = FormStartPosition.Manual;
-            DoubleBuffered = true; BackColor = Color.Magenta; TransparencyKey = Color.Magenta;
-            Icon = Theme.AppIcon();
-            var wa = Screen.PrimaryScreen.WorkingArea;
-            int w = Math.Min(1180, wa.Width - 40), h = code != null ? 520 : 470;
-            Size = new Size(w, h);
-            Location = new Point(wa.Left + (wa.Width - w) / 2, wa.Bottom - h - 20);
-
-            bOk = MakeBtn(code != null ? "OK, I told them" : "OK", Color.FromArgb(34, 139, 70));
-            bOk.Click += (s, e) => Close();
-            Controls.Add(bOk);
-            if (help)
-            {
-                bHelp = MakeBtn("I need help", Color.FromArgb(30, 90, 190));
-                bHelp.Click += (s, e) => { Close(); Helper.RequestHelp(); };
-                Controls.Add(bHelp);
-            }
-            int bw = 260, bh = 70, y = h - bh - 22, right = w - 50;
-            bOk.SetBounds(right - bw, y, bw, bh);
-            if (bHelp != null) bHelp.SetBounds(right - bw * 2 - 20, y, bw, bh);
-
-            // fall back: close by itself after a while if nobody is there (codes stay up longer)
-            auto = new System.Windows.Forms.Timer { Interval = code != null ? 600000 : 180000 };
-            auto.Tick += (s, e) => Close();
-            auto.Start();
-        }
-
-        Button MakeBtn(string t, Color c)
-        {
-            var b = new Button { Text = t, FlatStyle = FlatStyle.Flat, BackColor = c, ForeColor = Color.White, Font = Px(28, FontStyle.Bold), Cursor = Cursors.Hand, TabStop = true };
-            b.FlatAppearance.BorderSize = 0;
-            return b;
-        }
-
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            if (!speak) return;
-            try
-            {
-                voice = new System.Speech.Synthesis.SpeechSynthesizer { Rate = -2, Volume = 100 };
-                string say = text;
-                if (code != null) say += " " + string.Join(", ", code.Select(ch => ch.ToString())) + ". Again: " + string.Join(", ", code.Select(ch => ch.ToString())) + ".";
-                voice.SpeakAsync(say);
-            }
-            catch { }
-        }
-
-        protected override void OnFormClosed(FormClosedEventArgs e)
-        {
-            try { if (voice != null) { voice.SpeakAsyncCancelAll(); voice.Dispose(); } } catch { }
-            if (auto != null) auto.Dispose();
-            base.OnFormClosed(e);
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            var g = e.Graphics; g.SmoothingMode = SmoothingMode.AntiAlias; g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-            int H = Height, W = Width;
-            // bubble
-            var bubble = new RectangleF(10, 10, W - 20, H - 20);
-            using (var path = Theme.Round(bubble, 36))
-            {
-                using (var br = new SolidBrush(Color.FromArgb(255, 252, 232))) g.FillPath(br, path);
-                using (var pen = new Pen(Color.FromArgb(40, 40, 40), 6)) g.DrawPath(pen, path);
-            }
-            // words
-            var area = new RectangleF(bubble.X + 36, bubble.Y + 26, bubble.Width - 72, (code != null ? 150 : H - 150));
-            float size = 44;
-            Font f = null;
-            using (var fmt = new StringFormat { Trimming = StringTrimming.Word })
-            {
-                for (; size >= 22; size -= 2)
-                {
-                    if (f != null) f.Dispose();
-                    f = Px(size, FontStyle.Bold);
-                    if (g.MeasureString(text, f, (int)area.Width, fmt).Height <= area.Height) break;
-                }
-                g.DrawString(text, f, Brushes.Black, area, fmt);
-                f.Dispose();
-            }
-            if (code != null)
-                using (var cf = Px(150, FontStyle.Bold))
-                using (var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
-                using (var br = new SolidBrush(Color.FromArgb(20, 60, 170)))
-                    g.DrawString(code, cf, br, new RectangleF(bubble.X, bubble.Y + 130, bubble.Width, 190), sf);
-        }
-    }
-
     /// <summary>The setup window for family helper mode.</summary>
     class HelperSetupForm : Form
     {
@@ -446,7 +333,7 @@ namespace TinyGuard
                 return new HelperConfig { On = cOn.Checked, Wizard = cWiz.Checked, AutoCheck = cAuto.Checked, IntroDone = c.IntroDone, SleepUntil = c.SleepUntil, Name = tName.Text.Trim().Length > 0 ? tName.Text.Trim() : "your kid", Email = tEmail.Text.Trim(), Smtp = tSmtp.Text.Trim(), Port = port, User = tUser.Text.Trim(), Pass = tPass.Text, Server = tServer.Text.Trim() };
             };
             bSave.Click += (s, e) => { Helper.Apply(read()); lMsg.Text = cOn.Checked ? "Saved. Family helper mode is on and the screen saver is turned on." : "Saved. Family helper mode is off."; };
-            bTest.Click += (s, e) => { Helper.Apply(read()); Helper.Greet(true); };
+            bTest.Click += (s, e) => { Helper.Apply(read()); Wizard.Appear(); Helper.Greet(true); };
             bMail.Click += (s, e) =>
             {
                 Helper.Apply(read()); lMsg.Text = "Sending...";
