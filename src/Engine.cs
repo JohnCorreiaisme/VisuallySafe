@@ -183,7 +183,7 @@ namespace TinyGuard
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.76";
+        public const string Version = "1.0.77";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 

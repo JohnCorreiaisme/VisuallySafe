@@ -813,6 +813,7 @@ namespace TinyGuard
         {
             if (queue.Count == 0 || form == null) { if (form != null) form.Holding = ask != null; return; }
             try { if (IdleInfo.FullscreenAppActive()) { Task.Delay(15000).ContinueWith(t => { try { sync.BeginInvoke(new Action(Next)); } catch { } }); return; } } catch { }     // never talk over a game or a video: wait until it ends
+            if (ask != null && Talking) { Task.Delay(3000).ContinueWith(t => { try { sync.BeginInvoke(new Action(Next)); } catch { } }); return; }     // never cut off an answer he is speaking: wait for it to finish
             var it = queue.Dequeue();
             form.BubbleOpen = true;
             bubble = new WizardBubble(it.Text, it.Help, it.Code, form.Head, form.FootY);
