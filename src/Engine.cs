@@ -183,7 +183,7 @@ namespace VisuallySafe
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.86";
+        public const string Version = "1.0.87";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -598,7 +598,7 @@ namespace VisuallySafe
             if (!Hash(path, out sha, out md5, out isPe, out entropy)) return null;
             var rec = new ScanRecord { Time = DateTime.Now, FilePath = path, Sha256 = sha };
             Classify(rec, md5, isPe, entropy);
-            if (rec.Verdict == Verdict.Suspicious) AskDefender(rec);
+            if (rec.Verdict >= Verdict.Suspicious) AskDefender(rec);
             return rec;
         }
 
@@ -1176,7 +1176,7 @@ namespace VisuallySafe
 
             var rec = new ScanRecord { Time = DateTime.Now, FilePath = path, Sha256 = sha };
             Classify(rec, md5, isPe, entropy);
-            if (manual || rec.Verdict == Verdict.Suspicious) AskDefender(rec);
+            if (manual || rec.Verdict >= Verdict.Suspicious) AskDefender(rec);
             SetProg(path, 0.97);
             Ledger(rec);
 
@@ -1197,8 +1197,10 @@ namespace VisuallySafe
         // Microsoft Defender gets a say on files you scan that nothing else has vouched for. Report only: Defender removes nothing for us.
         void AskDefender(ScanRecord rec)
         {
-            if (!S.UseDefender || rec.Verdict >= Verdict.Malicious) return;
-            if (rec.Verdict != Verdict.Unknown && rec.Verdict != Verdict.Suspicious) return;     // signed or already-known-good files need no second opinion
+            // A red verdict from Visually Safe's own checks (rules, lists, the AI) goes to Defender first: if Defender finds nothing, the file is unflagged and not quarantined.
+            bool ownRed = rec.Verdict == Verdict.Malicious && !(rec.Detail ?? "").StartsWith("Microsoft Defender", StringComparison.OrdinalIgnoreCase);
+            if (!S.UseDefender || (rec.Verdict >= Verdict.Malicious && !ownRed)) return;
+            if (rec.Verdict != Verdict.Unknown && rec.Verdict != Verdict.Suspicious && !ownRed) return;     // signed or already-known-good files need no second opinion
             if (rec.Verdict == Verdict.Unknown && !S.Cloud) return;
             try { if (rec.FilePath.StartsWith(AppDomain.CurrentDomain.BaseDirectory, StringComparison.OrdinalIgnoreCase)) return; } catch { }     // never judge ourselves: Defender has mislabelled Visually Safe before
             var a = DefenderLink.Check(rec.FilePath);
@@ -1206,13 +1208,13 @@ namespace VisuallySafe
             if (!a.Threat)
             {
                 // Visually Safe's own guess (AI or how the file looks) is overruled when Windows' protection finds nothing. A YARA rule match stays a warning.
-                if (rec.Verdict == Verdict.Suspicious && !rec.Detail.StartsWith("YARA rule", StringComparison.OrdinalIgnoreCase))
+                if (ownRed || (rec.Verdict == Verdict.Suspicious && !rec.Detail.StartsWith("YARA rule", StringComparison.OrdinalIgnoreCase)))
                 { rec.Detail = "Microsoft Defender: no threat found (Visually Safe's guess was: " + rec.Detail + ")"; rec.Verdict = Verdict.Unknown; }
                 else rec.Detail += " · Microsoft Defender: no threat found";
                 return;
             }
             string name = a.Name.Length > 0 ? a.Name : "a threat";
-            if (a.Ml) { rec.Verdict = Verdict.Suspicious; rec.Detail = "Microsoft Defender suspects " + name + " (a machine-guess, so unconfirmed)"; }
+            if (a.Ml) { if (ownRed) rec.Detail += " · Microsoft Defender also suspects " + name; else { rec.Verdict = Verdict.Suspicious; rec.Detail = "Microsoft Defender suspects " + name + " (a machine-guess, so unconfirmed)"; } }
             else { rec.Verdict = Verdict.Malicious; rec.Detail = "Microsoft Defender: " + name; }
         }
 
@@ -1248,7 +1250,7 @@ namespace VisuallySafe
             if (!Hash(path, out sha, out md5, out isPe, out entropy)) return;
             var rec = new ScanRecord { Time = DateTime.Now, FilePath = path, Sha256 = sha };
             Classify(rec, md5, isPe, entropy);
-            if (rec.Verdict == Verdict.Suspicious) AskDefender(rec);
+            if (rec.Verdict >= Verdict.Suspicious) AskDefender(rec);
             Ledger(rec);
             lock (gate)
             {

@@ -153,6 +153,7 @@ namespace VisuallySafe
             {
                 form.Alert = true;
                 bool mal = r.Verdict == Verdict.Malicious;
+                if (mal && r.Quarantined && ThreatPopup.ShowFor(eng, r)) { form.RefreshAll(true); continue; }
                 tray.ShowBalloonTip(6000,
                     mal ? (r.Quarantined ? "Malware blocked and quarantined" : "Malware found") : "Suspicious file",
                     r.Name + "\n" + r.Detail, mal ? ToolTipIcon.Error : ToolTipIcon.Warning);
@@ -1045,6 +1046,8 @@ namespace VisuallySafe
             string a0 = args.Length > 0 ? args[0].ToLowerInvariant() : "";
             if (a0.StartsWith("/p") || a0.StartsWith("-p")) return 0;
             bool saverArg = a0.StartsWith("/s") || a0.StartsWith("-s") || a0 == "--saver", cfgArg = a0.StartsWith("/c") || a0.StartsWith("-c");
+            string popupShot = Arg(args, "--popup-shot");
+            if (popupShot != null) { ThreatPopup.Snap(popupShot); return 0; }
             string scanArg = Arg(args, "--scan-file");     // from the right-click menu: hand the file to the running Visually Safe
             if (scanArg != null)
             {
