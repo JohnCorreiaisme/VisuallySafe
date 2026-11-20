@@ -4,9 +4,7 @@
 
 ## Watch how it works
 
-[![Watch the how-to video: Visually Safe, step by step](docs/how-to-frame.png)](docs/how-to-use.mp4)
-
-*Click the picture to watch the 2 and a half minute how-to video.*
+https://github.com/user-attachments/assets/2d20e1f3-8236-4516-854b-4a06de39bbb2
 
 It works **alongside Microsoft Defender and does not replace it.** It is not made by, endorsed by, or connected to Microsoft.
 
