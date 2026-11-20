@@ -572,10 +572,10 @@ namespace VisuallySafe
             Text = "Ask the wizard"; Icon = Theme.AppIcon(); TopMost = true; StartPosition = FormStartPosition.Manual;
             FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false; ShowInTaskbar = false;
             BackColor = Color.FromArgb(255, 252, 232); ForeColor = Color.Black;
-            var wa = Screen.PrimaryScreen.WorkingArea; int w = Math.Min(760, wa.Width - 40), h = 626;
+            var wa = Screen.PrimaryScreen.WorkingArea; int w = Math.Min(860, wa.Width - 40), h = Math.Min(wa.Height - 60, 900), extra = h - 626, dx = w - 760;
             ClientSize = new Size(w, h); Location = new Point(wa.Left + (wa.Width - w) / 2, Math.Max(wa.Top + 10, wa.Bottom - h - 280));
             Controls.Add(new Label { Text = "Ask me anything about your computer", Font = Px(26, FontStyle.Bold), Left = 20, Top = 14, Width = w - 40, Height = 40 });
-            lAns = new TextBox { Font = Px(22, FontStyle.Regular), Left = 20, Top = 62, Width = w - 40, Height = 230, BackColor = Color.White, ForeColor = Color.Black, BorderStyle = BorderStyle.FixedSingle, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Text = "Hello! I am your wizard. Type a question below, or press the microphone and speak." };
+            lAns = new TextBox { Font = Px(36, FontStyle.Regular), Left = 20, Top = 62, Width = w - 40, Height = 230 + extra, BackColor = Color.White, ForeColor = Color.Black, BorderStyle = BorderStyle.FixedSingle, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Text = "Hello! I am your wizard. Type a question below, or press the microphone and speak." };
             tIn = new TextBox { Font = Px(26, FontStyle.Regular), Left = 20, Top = 304, Width = w - 40 };
             bAsk = Mk("Ask", Color.FromArgb(34, 139, 70), 20, 356, 150); bMic = Mk("🎤 Speak", Color.FromArgb(110, 70, 170), 182, 356, 180);
             var bBoxes = Mk("What do the boxes mean?", Color.FromArgb(30, 90, 190), 20, 424, 340);
@@ -586,18 +586,23 @@ namespace VisuallySafe
             var bClose = Mk("Close", Color.FromArgb(90, 90, 90), 556, 356, 184);
             var bTopics = Mk("Common problems  \u25BE", Color.FromArgb(110, 70, 170), 20, 548, 340);
             var bSleep = Mk("Sleep for 48 hours", Color.FromArgb(90, 90, 90), 372, 548, 340);
+            foreach (var c in new Control[] { tIn, bAsk, bMic, bBoxes, bSafe, bDesk, bItems, bFix, bClose, bTopics, bSleep })
+            {
+                c.Top += extra;
+                if (c.Left > 200 && c != tIn) c.Left += dx;     // the right-hand column moves out with the wider window
+            }
             Controls.AddRange(new Control[] { lAns, tIn, bAsk, bMic, bBoxes, bSafe, bDesk, bItems, bFix, bClose, bTopics, bSleep });
             bSleep.Click += (s, e) => { Wizard.Sleep(48); Close(); };
             bTopics.Click += (s, e) =>
             {
-                var m = new ContextMenuStrip { Font = Px(19, FontStyle.Regular) };
+                var m = new ContextMenuStrip { Font = Px(26, FontStyle.Regular) };
                 foreach (var grp in WizardHelp.Topics.GroupBy(t => t.Category))
                 {
                     var sub = new ToolStripMenuItem(grp.Key);
                     foreach (var t in grp) { var tt = t; sub.DropDownItems.Add(tt.Title, null, (s2, e2) => Show(tt.Text.Replace("{who}", Wizard.Who))); }
                     m.Items.Add(sub);
                 }
-                m.Show(bTopics, new Point(0, -m.Items.Count * 34));
+                m.Show(bTopics, new Point(0, -m.Items.Count * 46));
             };
             AcceptButton = bAsk;
             bAsk.Click += (s, e) => Go(tIn.Text);
@@ -609,6 +614,18 @@ namespace VisuallySafe
             bClose.Click += (s, e) => Close();
             bMic.Click += (s, e) => Listen();
             Shown += (s, e) => { tIn.Focus(); Wizard.Speak("Hello! I am your wizard. Ask me anything, and I will keep you posted on what your computer is doing."); };
+        }
+
+        /// <summary>Developer check: draws the window with a sample answer to a picture (--ask-shot out.png).</summary>
+        public static void Snap(string file)
+        {
+            using (var f = new WizardAsk())
+            {
+                f.Opacity = 0; f.ShowInTaskbar = false; f.Show(); Application.DoEvents();
+                f.lAns.Text = "Step 1: Click the Start button, the little windows picture at the bottom left.\r\nStep 2: Type the word Printers, then press Enter.\r\nStep 3: Click your printer, then click Open queue and cancel anything stuck.";
+                using (var bmp = new Bitmap(f.ClientSize.Width, f.ClientSize.Height))
+                { f.DrawToBitmap(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height)); bmp.Save(file, System.Drawing.Imaging.ImageFormat.Png); }
+            }
         }
 
         Button Mk(string t, Color c, int x, int y, int w)

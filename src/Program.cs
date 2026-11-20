@@ -1046,6 +1046,8 @@ namespace VisuallySafe
             string a0 = args.Length > 0 ? args[0].ToLowerInvariant() : "";
             if (a0.StartsWith("/p") || a0.StartsWith("-p")) return 0;
             bool saverArg = a0.StartsWith("/s") || a0.StartsWith("-s") || a0 == "--saver", cfgArg = a0.StartsWith("/c") || a0.StartsWith("-c");
+            string askShot = Arg(args, "--ask-shot");
+            if (askShot != null) { WizardAsk.Snap(askShot); return 0; }
             string popupShot = Arg(args, "--popup-shot");
             if (popupShot != null) { ThreatPopup.Snap(popupShot); return 0; }
             string scanArg = Arg(args, "--scan-file");     // from the right-click menu: hand the file to the running Visually Safe
