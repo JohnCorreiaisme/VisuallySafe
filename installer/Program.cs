@@ -35,7 +35,7 @@ namespace TinyGuardSetup
     static class Installer
     {
         public static string Dest { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "TinyGuard"); } }
-        public static string StartMenuLink { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "TinyGuard.lnk"); } }
+        public static string StartMenuLink { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "Visually Safe.lnk"); } }
         const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\TinyGuard";
         static readonly string[] ShellRoots = { "*", "Directory", "AllFilesystemObjects", "Drive", "lnkfile", "InternetShortcut" };
 
@@ -135,14 +135,15 @@ namespace TinyGuardSetup
                 File.Copy(exe, Path.Combine(dest, "TinyGuard.scr"), true);                  // the screen saver copies
                 File.Copy(exe, Path.Combine(dest, "TinyGuardDefrag.scr"), true);
                 File.Copy(Assembly.GetExecutingAssembly().Location, Path.Combine(dest, "TinyGuardSetup.exe"), true);     // kept so Windows can uninstall it later
-                MakeShortcut(StartMenuLink, exe, dest, "TinyGuard: a friendly helper for Windows' built-in protection");
+                MakeShortcut(StartMenuLink, exe, dest, "Visually Safe: a helpful antivirus companion");
+                try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "TinyGuard.lnk")); } catch { }      // the old name
 
                 string ver = PayloadVersion();
                 using (var k = Registry.LocalMachine.CreateSubKey(UninstallKey))
                 {
-                    k.SetValue("DisplayName", "TinyGuard");
+                    k.SetValue("DisplayName", "Visually Safe");
                     k.SetValue("DisplayVersion", ver);
-                    k.SetValue("Publisher", "TinyGuard");
+                    k.SetValue("Publisher", "Visually Safe");
                     k.SetValue("InstallLocation", dest);
                     k.SetValue("DisplayIcon", exe);
                     k.SetValue("UninstallString", "\"" + Path.Combine(dest, "TinyGuardSetup.exe") + "\" --uninstall");
@@ -190,8 +191,9 @@ namespace TinyGuardSetup
         public static void PersonalSetup(string dest, bool desktopIcon, bool startWithWindows, bool wizard, string name, string email)
         {
             string exe = Path.Combine(dest, "TinyGuard.exe");
+            try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TinyGuard.lnk")); } catch { }      // the old name
             if (desktopIcon)
-                try { MakeShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TinyGuard.lnk"), exe, dest, "TinyGuard"); } catch { }
+                try { MakeShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Visually Safe.lnk"), exe, dest, "Visually Safe"); } catch { }
             try
             {
                 using (var k = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"))
@@ -217,6 +219,7 @@ namespace TinyGuardSetup
 
         public static void RemovePersonal()
         {
+            try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Visually Safe.lnk")); } catch { }
             try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TinyGuard.lnk")); } catch { }
             try { using (var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true)) if (k != null) k.DeleteValue("TinyGuard", false); } catch { }
             foreach (string r in ShellRoots) try { Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\" + r + @"\shell\TinyGuardScan", false); } catch { }
@@ -253,7 +256,7 @@ namespace TinyGuardSetup
 
         public SetupForm()
         {
-            Text = "TinyGuard Setup"; StartPosition = FormStartPosition.CenterScreen; FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false;
+            Text = "Visually Safe Setup"; StartPosition = FormStartPosition.CenterScreen; FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false;
             ClientSize = new Size(860, 600); BackColor = Color.White; ForeColor = Ink;
             try { Icon = Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location); } catch { }
             bBack = Btn("Back", 30, 520, 150, Color.FromArgb(120, 126, 142));
@@ -286,13 +289,13 @@ namespace TinyGuardSetup
         void BuildWelcome()
         {
             var p = NewPage();
-            L(p, "Welcome to TinyGuard", 40, 24, 780, 56, 38, true);
+            L(p, "Welcome to Visually Safe", 40, 24, 780, 56, 38, true);
             L(p, "A friendly helper for Windows' built-in protection. A little wizard walks across the screen, tells you what your computer is doing in plain words and a spoken voice, and warns you if something is wrong.", 44, 92, 770, 100, 21, false, Soft);
             L(p, "It works alongside Microsoft Defender. It does not replace it, and it is not made by or connected to Microsoft.", 44, 190, 770, 60, 18, false, Soft);
             bool win = Installer.WindowsOk, net = Installer.DotNet48(), def = Installer.DefenderFound();
             L(p, (win ? "✓  " : "✗  ") + "Windows 10 or 11" + (win ? "" : "  (this needs Windows 10 or newer)"), 44, 262, 770, 32, 21, true, win ? Green : Color.Firebrick);
             L(p, (net ? "✓  " : "✗  ") + ".NET Framework 4.8" + (net ? "" : "  (a free Windows add-on is missing: search the web for  Microsoft .NET Framework 4.8 download)"), 44, 298, 770, 32, 21, true, net ? Green : Color.Firebrick);
-            L(p, (def ? "✓  " : "–  ") + "Microsoft Defender found" + (def ? "" : "  (TinyGuard still works, but it can't use Windows' own scanner)"), 44, 334, 770, 32, 21, true, def ? Green : Soft);
+            L(p, (def ? "✓  " : "–  ") + "Microsoft Defender found" + (def ? "" : "  (Visually Safe still works, but it can't use Windows' own scanner)"), 44, 334, 770, 32, 21, true, def ? Green : Soft);
             var tip = new Panel { Left = 40, Top = 388, Width = 780, Height = 100, BackColor = Cream };
             tip.Controls.Add(new Label { Text = "If Windows shows a blue box saying “Windows protected your PC”, that is normal for a new program. Click “More info”, then “Run anyway”.", Left = 16, Top = 12, Width = 750, Height = 78, Font = F(19), ForeColor = Ink });
             p.Controls.Add(tip);
@@ -313,8 +316,8 @@ namespace TinyGuardSetup
             tEmail = new TextBox { Left = 44, Top = 308, Width = 600, Font = F(22) };
             p.Controls.AddRange(new Control[] { tName, tEmail });
             cWizard = new CheckBox { Text = "Show the wizard on the screen (recommended)", Left = 44, Top = 372, Width = 770, Height = 32, Font = F(20), Checked = true };
-            cDesktop = new CheckBox { Text = "Put a TinyGuard icon on the Desktop", Left = 44, Top = 410, Width = 770, Height = 32, Font = F(20), Checked = true };
-            cStart = new CheckBox { Text = "Start TinyGuard when Windows starts", Left = 44, Top = 448, Width = 770, Height = 32, Font = F(20), Checked = true };
+            cDesktop = new CheckBox { Text = "Put a Visually Safe icon on the Desktop", Left = 44, Top = 410, Width = 770, Height = 32, Font = F(20), Checked = true };
+            cStart = new CheckBox { Text = "Start Visually Safe when Windows starts", Left = 44, Top = 448, Width = 770, Height = 32, Font = F(20), Checked = true };
             p.Controls.AddRange(new Control[] { cWizard, cDesktop, cStart });
             rMe.CheckedChanged += (s, e) =>
             {
@@ -332,13 +335,13 @@ namespace TinyGuardSetup
             var box = new Panel { Left = 44, Top = 160, Width = 470, Height = 210, BackColor = Color.FromArgb(240, 243, 249), BorderStyle = BorderStyle.FixedSingle };
             box.Controls.Add(new Label { Text = "User Account Control", Left = 14, Top = 10, Width = 440, Height = 26, Font = F(17, true), ForeColor = Color.FromArgb(40, 60, 120) });
             box.Controls.Add(new Label { Text = "Do you want to allow this app to make changes to your device?", Left = 14, Top = 46, Width = 440, Height = 60, Font = F(20), ForeColor = Ink });
-            box.Controls.Add(new Label { Text = "TinyGuard Setup", Left = 14, Top = 112, Width = 300, Height = 26, Font = F(17), ForeColor = Soft });
+            box.Controls.Add(new Label { Text = "Visually Safe Setup", Left = 14, Top = 112, Width = 300, Height = 26, Font = F(17), ForeColor = Soft });
             var yes = new Label { Text = "Yes", Left = 90, Top = 150, Width = 120, Height = 44, Font = F(22, true), ForeColor = Color.White, BackColor = Blue, TextAlign = ContentAlignment.MiddleCenter };
             var no = new Label { Text = "No", Left = 250, Top = 150, Width = 120, Height = 44, Font = F(22), ForeColor = Ink, BackColor = Color.FromArgb(205, 208, 216), TextAlign = ContentAlignment.MiddleCenter };
             box.Controls.AddRange(new Control[] { yes, no });
             p.Controls.Add(box);
             L(p, "<  Click Yes", 530, 196, 290, 44, 28, true, Blue);
-            L(p, "Why it asks: TinyGuard goes into the protected Program Files folder, and it needs permission to check files anywhere on the computer and to start when Windows starts. It changes no security settings.", 44, 384, 770, 100, 19, false, Soft);
+            L(p, "Why it asks: Visually Safe goes into the protected Program Files folder, and it needs permission to check files anywhere on the computer and to start when Windows starts. It changes no security settings.", 44, 384, 770, 100, 19, false, Soft);
         }
 
         void BuildWorking()
@@ -353,7 +356,7 @@ namespace TinyGuardSetup
             var p = NewPage();
             lDoneTitle = L(p, "", 40, 24, 780, 56, 38, true);
             lDoneBody = L(p, "", 44, 100, 770, 220, 22, false, Soft);
-            cLaunch = new CheckBox { Text = "Start TinyGuard now (the wizard will say hello)", Left = 44, Top = 360, Width = 770, Height = 36, Font = F(21), Checked = true };
+            cLaunch = new CheckBox { Text = "Start Visually Safe now (the wizard will say hello)", Left = 44, Top = 360, Width = 770, Height = 36, Font = F(21), Checked = true };
             p.Controls.Add(cLaunch);
             var support = new LinkLabel { Text = "Free and open source. Say thanks on Ko-fi (optional)", Left = 44, Top = 420, Width = 770, Height = 30, Font = F(19), LinkColor = Blue };
             support.LinkClicked += (s, e) => { try { Process.Start(new ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } };
@@ -426,7 +429,7 @@ namespace TinyGuardSetup
             if (err == null)
             {
                 lDoneTitle.Text = "All set!";
-                lDoneBody.Text = "TinyGuard is installed." + (cWizard.Checked ? " The wizard will appear on the screen and say hello." : "") + "\r\n\r\nYou can open it from the Start menu" + (cDesktop.Checked ? " or the Desktop icon" : "") + ". To remove it later, use Windows Settings, then Apps.";
+                lDoneBody.Text = "Visually Safe is installed." + (cWizard.Checked ? " The wizard will appear on the screen and say hello." : "") + "\r\n\r\nYou can open it from the Start menu" + (cDesktop.Checked ? " or the Desktop icon" : "") + ". To remove it later, use Windows Settings, then Apps.";
             }
             else if (err == "cancelled")
             {
@@ -436,7 +439,7 @@ namespace TinyGuardSetup
             else
             {
                 lDoneTitle.Text = "Something went wrong.";
-                lDoneBody.Text = "TinyGuard could not finish installing (" + err + ").\r\n\r\nPlease close any other TinyGuard windows and try again. If it keeps happening, ask the person who owns this computer.";
+                lDoneBody.Text = "Visually Safe could not finish installing (" + err + ").\r\n\r\nPlease close any other Visually Safe windows and try again. If it keeps happening, ask the person who owns this computer.";
             }
             Show(4);
         }
@@ -450,9 +453,9 @@ namespace TinyGuardSetup
 
         public UninstallForm()
         {
-            Text = "Remove TinyGuard"; StartPosition = FormStartPosition.CenterScreen; FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false;
+            Text = "Remove Visually Safe"; StartPosition = FormStartPosition.CenterScreen; FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false;
             ClientSize = new Size(760, 420); BackColor = Color.White;
-            lTitle = new Label { Text = "Remove TinyGuard?", Left = 36, Top = 24, Width = 690, Height = 56, Font = F(34, true) };
+            lTitle = new Label { Text = "Remove Visually Safe?", Left = 36, Top = 24, Width = 690, Height = 56, Font = F(34, true) };
             lBody = new Label { Text = "Windows will ask for permission. Click Yes.\r\n\r\nYour settings and scan history are kept, in case you install it again.", Left = 40, Top = 100, Width = 680, Height = 200, Font = F(22), ForeColor = Color.FromArgb(90, 98, 118) };
             bGo = new Button { Text = "Remove", Left = 340, Top = 330, Width = 190, Height = 56, FlatStyle = FlatStyle.Flat, BackColor = Color.Firebrick, ForeColor = Color.White, Font = F(22, true) };
             bClose = new Button { Text = "Cancel", Left = 550, Top = 330, Width = 170, Height = 56, FlatStyle = FlatStyle.Flat, BackColor = Color.FromArgb(120, 126, 142), ForeColor = Color.White, Font = F(22, true) };
@@ -473,7 +476,7 @@ namespace TinyGuardSetup
                     {
                         BeginInvoke(new Action(() =>
                         {
-                            lTitle.Text = err == null ? "TinyGuard was removed." : err == "cancelled" ? "Nothing was removed." : "Something went wrong.";
+                            lTitle.Text = err == null ? "Visually Safe was removed." : err == "cancelled" ? "Nothing was removed." : "Something went wrong.";
                             lBody.Text = err == null ? "Thank you for trying it." : err == "cancelled" ? "The permission box was closed, so Windows did not allow it." : "Could not remove it (" + err + ").";
                             bGo.Visible = false; bClose.Text = "Close";
                         }));

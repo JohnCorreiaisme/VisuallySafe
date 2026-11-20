@@ -139,12 +139,12 @@ namespace TinyGuard
             float sc; using (var g = Graphics.FromHwnd(IntPtr.Zero)) sc = g.DpiX / 96f;
             W = (int)(168 * sc); H = (int)(224 * sc); P = (int)(46 * sc); scale = sc;
             FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false; TopMost = true; StartPosition = FormStartPosition.Manual;
-            Size = new Size(W + 2 * P, H + 2 * P); Text = "TinyGuard wizard";
+            Size = new Size(W + 2 * P, H + 2 * P); Text = "Visually Safe wizard";
             var wa = Screen.PrimaryScreen.WorkingArea; x = wa.Left + wa.Width * 0.3f;
             var menu = Menus.Make();
             menu.Items.Add("Ask the wizard…", null, (s, e) => Wizard.OpenAsk());
             menu.Items.Add("What do the boxes mean?", null, (s, e) => Wizard.Say(Wizard.BoxesText(), false, null));
-            menu.Items.Add("Support TinyGuard (Ko-fi)", null, (s, e) => { try { Process.Start(new ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } });
+            menu.Items.Add("Support Visually Safe (Ko-fi)", null, (s, e) => { try { Process.Start(new ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } });
             menu.Items.Add("Close the wizard (Alt+click)", null, (s, e) => Wizard.Dismiss());
             menu.Items.Add("Let the wizard sleep for 48 hours", null, (s, e) => Wizard.Sleep(48));
             ContextMenuStrip = menu;
@@ -165,7 +165,7 @@ namespace TinyGuard
             };
             MouseUp += (s, e) =>
             {
-                if (e.Button == MouseButtons.Left && (ModifierKeys & Keys.Alt) != 0) { Wizard.Dismiss(); return; }      // Alt+click closes him (he is back next time TinyGuard starts, or when called from the AI helper page)
+                if (e.Button == MouseButtons.Left && (ModifierKeys & Keys.Alt) != 0) { Wizard.Dismiss(); return; }      // Alt+click closes him (he is back next time Visually Safe starts, or when called from the AI helper page)
                 if (e.Button != MouseButtons.Left || !drag) return; drag = false; Capture = false; if (!dragMoved) Wizard.OpenAsk(); };
             timer = new System.Windows.Forms.Timer { Interval = 70 };
             timer.Tick += (s, e) => Step();
@@ -708,7 +708,7 @@ namespace TinyGuard
             if (sync != null) sync.BeginInvoke(new Action(Sync));
         }
 
-        public static bool Dismissed;              // closed with Alt+click: gone until TinyGuard starts again, or until he is called from the AI helper page
+        public static bool Dismissed;              // closed with Alt+click: gone until Visually Safe starts again, or until he is called from the AI helper page
         public static void Dismiss() { Dismissed = true; StopSpeaking(); if (sync != null) sync.BeginInvoke(new Action(Sync)); }                 // summoned with the big button even though family helper mode is off
         static System.Windows.Forms.Timer narrateTimer;
         static bool nQuick, nManual; static int qMile, manualAtt; static DateTime lastThreatSay = DateTime.MinValue;

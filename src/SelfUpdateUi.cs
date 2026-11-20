@@ -12,7 +12,7 @@ using System.Windows.Forms;
 namespace TinyGuard
 {
     /// <summary>
-    /// "Update TinyGuard with AI": copies the source, tells an AI agent what TinyGuard does and asks it whether TinyGuard needs more,
+    /// "Update Visually Safe with AI": copies the source, tells an AI agent what Visually Safe does and asks it whether Visually Safe needs more,
     /// then builds and tests the result, shows the owner what changed, and installs it only on approval. PROTECTED CODE (see SelfUpdate.cs).
     /// </summary>
     class SelfUpdateForm : Form
@@ -33,14 +33,14 @@ namespace TinyGuard
         {
             eng = engine;
             SuspendLayout();
-            Text = "Update TinyGuard with AI"; Icon = Theme.AppIcon();
+            Text = "Update Visually Safe with AI"; Icon = Theme.AppIcon();
             AutoScaleDimensions = new SizeF(96F, 96F); AutoScaleMode = AutoScaleMode.Dpi;
             FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; StartPosition = FormStartPosition.CenterScreen;
             ClientSize = new Size(700, 600); BackColor = Theme.Bg; ForeColor = Theme.Text; Font = new Font("Segoe UI", 9f);
 
-            Controls.Add(new Label { Text = "Update TinyGuard with AI", Font = new Font("Segoe UI Semibold", 14f), ForeColor = Theme.Text, AutoSize = false, Bounds = new Rectangle(22, 14, 650, 34), Tag = new Rectangle(22, 14, 650, 34) });
+            Controls.Add(new Label { Text = "Update Visually Safe with AI", Font = new Font("Segoe UI Semibold", 14f), ForeColor = Theme.Text, AutoSize = false, Bounds = new Rectangle(22, 14, 650, 34), Tag = new Rectangle(22, 14, 650, 34) });
             info = new Label { ForeColor = Theme.Muted, AutoSize = false, Bounds = new Rectangle(24, 52, 652, 62), Tag = new Rectangle(24, 52, 652, 62),
-                Text = "An AI agent is told what TinyGuard does and asked whether it needs updates to do more as an antivirus. It works only on a COPY of the source. TinyGuard then builds and tests the result and shows you what changed. Nothing is installed until you click Install, and the old program is kept and comes back by itself if the new one doesn't start properly." };
+                Text = "An AI agent is told what Visually Safe does and asked whether it needs updates to do more as an antivirus. It works only on a COPY of the source. Visually Safe then builds and tests the result and shows you what changed. Nothing is installed until you click Install, and the old program is kept and comes back by itself if the new one doesn't start properly." };
             bPrep.Bounds = new Rectangle(24, 122, 190, 38);
             bClaude.Bounds = new Rectangle(222, 122, 150, 38);
             bCodex.Bounds = new Rectangle(380, 122, 130, 38);
@@ -60,14 +60,14 @@ namespace TinyGuard
             bCheck.Click += (s, e) => Check();
             bInstall.Click += (s, e) => InstallNow();
             bDiscard.Click += (s, e) => { if (cts != null) cts.Cancel(); Close(); };
-            FormClosing += (s, e) => { if (busy && MessageBox.Show(this, "Something is still running. Stop it and close?", "TinyGuard", MessageBoxButtons.YesNo) != DialogResult.Yes) e.Cancel = true; else if (cts != null) cts.Cancel(); };
+            FormClosing += (s, e) => { if (busy && MessageBox.Show(this, "Something is still running. Stop it and close?", "Visually Safe", MessageBoxButtons.YesNo) != DialogResult.Yes) e.Cancel = true; else if (cts != null) cts.Cancel(); };
             Shown += (s, e) =>
             {
                 FitLabels.Apply(this);
                 string src = SelfUpdate.SourceDir();
-                if (src == null) Say("The source code wasn't found next to this copy of TinyGuard, so it can't update itself. (It looks for a folder with TinyGuard.csproj above the program's folder.)");
+                if (src == null) Say("The source code wasn't found next to this copy of Visually Safe, so it can't update itself. (It looks for a folder with TinyGuard.csproj above the program's folder.)");
                 else Say("Source code: " + src);
-                if (SelfUpdate.DotNet() == null) Say("The .NET SDK wasn't found. Without it TinyGuard can't build an update.");
+                if (SelfUpdate.DotNet() == null) Say("The .NET SDK wasn't found. Without it Visually Safe can't build an update.");
                 Task.Run(() => { try { agents = Agents.Detect(); } catch { } BeginInvoke(new Action(Refresh2)); });
                 Refresh2();
             };
@@ -163,7 +163,7 @@ namespace TinyGuard
             if (MessageBox.Show(this, msg, "Install update", MessageBoxButtons.YesNo, report.Warnings.Count > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             string err = SelfUpdate.Install(eng, session, report);
             if (err != null) { Say(err); return; }
-            Say("Installed. Restarting TinyGuard ...");
+            Say("Installed. Restarting Visually Safe ...");
             Task.Delay(800).ContinueWith(t => { var h = RestartRequested; if (h != null) BeginInvoke(new Action(() => h())); });
         }
     }

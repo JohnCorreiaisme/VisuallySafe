@@ -88,7 +88,7 @@ namespace TinyGuard
                 body += found > 0 ? " I found " + found + (found == 1 ? " thing" : " things") + " that need your attention." : "";
                 if (fresh.Count > 0) body += " A new program was set to start with Windows. If you did not install something, please ask " + who + ".";
                 body += " Please ask " + who + " to take a look.";
-                Helper.Notify("TinyGuard check on " + Environment.MachineName, "The scheduled check found " + found + " item(s) needing attention" + (fresh.Count > 0 ? " and new start-up entries:\r\n" + string.Join("\r\n", fresh) : "") + ".");
+                Helper.Notify("Visually Safe check on " + Environment.MachineName, "The scheduled check found " + found + " item(s) needing attention" + (fresh.Count > 0 ? " and new start-up entries:\r\n" + string.Join("\r\n", fresh) : "") + ".");
             }
             else body += " Everything looks fine." + upd + " I looked at your Desktop and Downloads.";
             return body;

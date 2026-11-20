@@ -1,5 +1,5 @@
-"""Builds TinyGuard and packs the friendly one-file installer:  python tools/build_setup.py
-Output: dist/TinyGuardSetup-<version>.exe  (+ a .sha256 file). Not signed: a code-signing certificate is what removes Windows' "unknown publisher" box.
+"""Builds Visually Safe and packs the friendly one-file installer:  python tools/build_setup.py
+Output: dist/VisuallySafeSetup-<version>.exe  (+ a .sha256 file). Not signed: a code-signing certificate is what removes Windows' "unknown publisher" box.
 """
 import hashlib, os, re, shutil, subprocess, sys, zipfile
 
@@ -28,15 +28,18 @@ with zipfile.ZipFile(payload, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
     for dirpath, _, files in os.walk(ydir):
         for f in files:
             full = os.path.join(dirpath, f)
-            z.write(full, os.path.relpath(full, 'bin').replace(os.sep, '/'))
+            try:
+                z.write(full, os.path.relpath(full, 'bin').replace(os.sep, '/'))
+            except OSError:      # Defender sometimes blocks the rules file (it holds malware signatures); the app downloads fresh rules itself
+                print('skipped (unreadable, likely blocked by Defender):', full)
     z.writestr('version.txt', ver)
 print('payload', round(os.path.getsize(payload) / 1048576, 1), 'MB')
 
 out = os.path.join('dist', 'setup')
 shutil.rmtree(out, ignore_errors=True)
 run('dotnet', 'build', os.path.join('installer', 'TinyGuardSetup.csproj'), '-c', 'Release', '-o', out)
-final = os.path.join('dist', 'TinyGuardSetup-%s.exe' % ver)
+final = os.path.join('dist', 'VisuallySafeSetup-%s.exe' % ver)
 shutil.copyfile(os.path.join(out, 'TinyGuardSetup.exe'), final)
 h = hashlib.sha256(open(final, 'rb').read()).hexdigest()
-open(os.path.join('dist', 'TinyGuardSetup-%s.sha256' % ver), 'w').write('%s  TinyGuardSetup-%s.exe\n' % (h, ver))
+open(os.path.join('dist', 'VisuallySafeSetup-%s.sha256' % ver), 'w').write('%s  VisuallySafeSetup-%s.exe\n' % (h, ver))
 print('done:', final, round(os.path.getsize(final) / 1048576, 1), 'MB')

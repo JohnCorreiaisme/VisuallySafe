@@ -595,7 +595,7 @@ namespace TinyGuard
             bGo.Click += (s, e) =>
             {
                 if (DefragService.Runner.Running) { DefragService.Runner.Stop(); return; }
-                if (!Admin.IsAdmin) { MessageBox.Show(FindForm(), "Defragmenting needs administrator rights. Use the Network page's \"Turn on network monitor\" button to restart TinyGuard as administrator.", "TinyGuard"); return; }
+                if (!Admin.IsAdmin) { MessageBox.Show(FindForm(), "Defragmenting needs administrator rights. Use the Network page's \"Turn on network monitor\" button to restart Visually Safe as administrator.", "Visually Safe"); return; }
                 if (MessageBox.Show(FindForm(), "Defragment " + DefragService.Drive + " now?\n\nWindows' own defrag tool will run at low priority and you can keep using the PC. " +
                         (DefragService.Ssd ? "This drive is a solid-state drive, so Windows will only 'trim' it (no moving of files)." : "It can take a long while on a big hard disk. You can stop it at any time.") + "\n\nProceed?",
                         "Defragment", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;

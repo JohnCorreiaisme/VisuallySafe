@@ -84,7 +84,7 @@ namespace TinyGuard
             public Waiting(string message)
             {
                 baseText = message;
-                Text = "TinyGuard";
+                Text = "Visually Safe";
                 FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = MinimizeBox = false; ShowInTaskbar = false;
                 StartPosition = FormStartPosition.CenterParent;
                 BackColor = Theme.Bg; ForeColor = Theme.Text;

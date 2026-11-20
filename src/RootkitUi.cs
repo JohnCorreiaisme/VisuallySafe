@@ -122,7 +122,7 @@ namespace TinyGuard
                     "Your PC will RESTART IMMEDIATELY and the scan can take 15 minutes or more. Save your work and close your programs first.\n\n" +
                     "Restart and scan now?", "Defender Offline scan", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             string err = RootkitCheck.StartDefenderOffline();
-            if (err != null) MessageBox.Show(FindForm(), "Couldn't start it: " + err + "\n\nDefender Offline only works when Microsoft Defender is your active antivirus.", "TinyGuard");
+            if (err != null) MessageBox.Show(FindForm(), "Couldn't start it: " + err + "\n\nDefender Offline only works when Microsoft Defender is your active antivirus.", "Visually Safe");
         }
 
         void UpdateButtons()

@@ -7,7 +7,7 @@ using System.IO;
 
 namespace TinyGuard
 {
-    /// <summary>Draws TinyGuard's program icon (a green shield with a check on a dark tile) and packs it into a multi-size .ico file.</summary>
+    /// <summary>Draws Visually Safe's program icon (a green shield with a check on a dark tile) and packs it into a multi-size .ico file.</summary>
     static class IconMaker
     {
         static Bitmap Draw(int size)

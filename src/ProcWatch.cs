@@ -32,7 +32,7 @@ namespace TinyGuard
         public ProcWatch(Action<int, string, bool> onStarted)
         {
             started = onStarted;
-            // First pass reports what is already running, so something started before TinyGuard is checked too.
+            // First pass reports what is already running, so something started before Visually Safe is checked too.
             timer = new Timer(_ => Poll(), null, 3000, 1000);
         }
 
@@ -55,7 +55,7 @@ namespace TinyGuard
                     now.Add(pid);
                     if (pid <= 4 || known.Contains(pid)) continue;
                     string path = PathOf(pid);
-                    if (path != null && !firstPass) started(pid, path, false);     // programs already running when TinyGuard starts are not scanned: nothing scans until a new program starts or you ask
+                    if (path != null && !firstPass) started(pid, path, false);     // programs already running when Visually Safe starts are not scanned: nothing scans until a new program starts or you ask
                 }
                 known = now;
                 firstPass = false;

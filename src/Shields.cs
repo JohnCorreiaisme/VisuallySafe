@@ -194,7 +194,7 @@ namespace TinyGuard
                 }
                 catch { }
             }
-            worker = new Thread(Work) { IsBackground = true, Name = "TinyGuard ransomware shield", Priority = ThreadPriority.BelowNormal };
+            worker = new Thread(Work) { IsBackground = true, Name = "Visually Safe ransomware shield", Priority = ThreadPriority.BelowNormal };
             worker.Start();
             Running = ws.Count > 0;
             sh.Log("Ransomware shield is watching " + Folders.Count + " folder" + (Folders.Count == 1 ? "" : "s") + ".", false);
@@ -212,7 +212,7 @@ namespace TinyGuard
 
         // ---- canary files
 
-        static string CanaryText() { return "TinyGuard canary file. It sits here so TinyGuard can tell if ransomware starts changing your files. Please leave it alone.\r\n" + new string('x', 600); }
+        static string CanaryText() { return "Visually Safe canary file. It sits here so Visually Safe can tell if ransomware starts changing your files. Please leave it alone.\r\n" + new string('x', 600); }
 
         void MakeCanary(string dir)
         {
@@ -414,12 +414,12 @@ namespace TinyGuard
                     string err; try { if (eng.QuarantinePath(s.Value, "Looked like ransomware (it was changing many of your files into scrambled data)", out err)) line += ", quarantined"; } catch { }
                     done.Add(line);
                 }
-                sh.Raise("Ransomware stopped", "Many of your files started turning into scrambled data. TinyGuard did this: " + string.Join("; ", done) + ". Check your Documents folder and restore anything damaged from a backup.", true);
+                sh.Raise("Ransomware stopped", "Many of your files started turning into scrambled data. Visually Safe did this: " + string.Join("; ", done) + ". Check your Documents folder and restore anything damaged from a backup.", true);
             }
             else if (suspects.Count > 0)
                 sh.Raise("Ransomware warning", "Many of your files are being scrambled" + (DryRun ? " (this is only the test)" : "") + ". Busiest programs: " + string.Join(", ", suspects.Select(x => Path.GetFileName(x.Value))) + ".", true);
             else
-                sh.Raise("Ransomware warning", "Many of your files are being scrambled" + (DryRun ? " (this is only the test)" : "") + ", but TinyGuard couldn't tell which program is doing it. If you didn't start this, disconnect the network and shut the PC down.", true);
+                sh.Raise("Ransomware warning", "Many of your files are being scrambled" + (DryRun ? " (this is only the test)" : "") + ", but Visually Safe couldn't tell which program is doing it. If you didn't start this, disconnect the network and shut the PC down.", true);
         }
 
         /// <summary>A safe test: makes a throw-away folder, scrambles a few dozen made-up files in it the way ransomware would, and reports what the shield did.</summary>
@@ -460,12 +460,12 @@ namespace TinyGuard
 
     /// <summary>
     /// Blocks known malware and phishing websites for every program on the PC by pointing their names at 0.0.0.0 in the Windows hosts file.
-    /// The lists come from free public feeds. TinyGuard only touches the part of the hosts file between its own two marker lines, and keeps a backup.
+    /// The lists come from free public feeds. Visually Safe only touches the part of the hosts file between its own two marker lines, and keeps a backup.
     /// </summary>
     class WebShield
     {
         readonly Shields sh; readonly Engine eng;
-        public const string Begin = "# BEGIN TinyGuard web shield (do not edit between these lines)", End = "# END TinyGuard web shield";
+        public const string Begin = "# BEGIN Visually Safe web shield (do not edit between these lines)", End = "# END Visually Safe web shield";
         public static string HostsPath { get { return Path.Combine(Environment.SystemDirectory, @"drivers\etc\hosts"); } }
         public string Status = "";
         const int MaxDomains = 40000;
@@ -519,7 +519,7 @@ namespace TinyGuard
         static string Download(string url)
         {
             var req = (HttpWebRequest)WebRequest.Create(url);
-            req.Timeout = 30000; req.ReadWriteTimeout = 30000; req.UserAgent = "TinyGuard";
+            req.Timeout = 30000; req.ReadWriteTimeout = 30000; req.UserAgent = "Visually Safe";
             using (var resp = (HttpWebResponse)req.GetResponse())
             using (var st = resp.GetResponseStream())
             using (var ms = new MemoryStream())
@@ -643,7 +643,7 @@ namespace TinyGuard
             try
             {
                 var req = (HttpWebRequest)WebRequest.Create("https://mb-api.abuse.ch/api/v1/");
-                req.Method = "POST"; req.ContentType = "application/x-www-form-urlencoded"; req.Timeout = 30000; req.UserAgent = "TinyGuard";
+                req.Method = "POST"; req.ContentType = "application/x-www-form-urlencoded"; req.Timeout = 30000; req.UserAgent = "Visually Safe";
                 req.Headers.Add("Auth-Key", eng.S.MbKey);
                 byte[] body = Encoding.ASCII.GetBytes("query=get_recent&selector=time");
                 using (var st = req.GetRequestStream()) st.Write(body, 0, body.Length);
@@ -678,14 +678,14 @@ namespace TinyGuard
     //  Self-protection
     // ================================================================================================================
 
-    /// <summary>Notices when TinyGuard's own program or settings are changed behind its back, and brings TinyGuard back if something kills it.</summary>
+    /// <summary>Notices when Visually Safe's own program or settings are changed behind its back, and brings Visually Safe back if something kills it.</summary>
     class SelfGuard : IDisposable
     {
         readonly Shields sh; readonly Engine eng;
         FileSystemWatcher settingsWatch;
         string startupHash = "";
         System.Threading.Timer timer;
-        public const string WatchdogTask = "TinyGuard Watchdog";
+        public const string WatchdogTask = "Visually Safe Watchdog";
         public SelfGuard(Shields s, Engine e) { sh = s; eng = e; }
 
         static string ExitFlag(string dataDir) { return Path.Combine(dataDir, "user-exit.flag"); }
@@ -731,7 +731,7 @@ namespace TinyGuard
                 {
                     string[] old = File.ReadAllText(f).Trim().Split('|');
                     if (old.Length == 2 && old[0] == Engine.Version && old[1] != startupHash)
-                        sh.Raise("TinyGuard's program changed", "TinyGuard's own program file is different from the one it started as last time, with the same version number. If you didn't update it yourself, something may have tampered with it.", true);
+                        sh.Raise("Visually Safe's program changed", "Visually Safe's own program file is different from the one it started as last time, with the same version number. If you didn't update it yourself, something may have tampered with it.", true);
                 }
                 File.WriteAllText(f, rec);
             }
@@ -746,7 +746,7 @@ namespace TinyGuard
                 if (startupHash.Length > 0 && now.Length > 0 && now != startupHash)
                 {
                     startupHash = now;
-                    sh.Raise("TinyGuard's program changed", "The TinyGuard program file on disk was replaced while it was running. If you didn't just install an update, treat this as suspicious.", true);
+                    sh.Raise("Visually Safe's program changed", "The Visually Safe program file on disk was replaced while it was running. If you didn't just install an update, treat this as suspicious.", true);
                 }
             }
             catch { }
@@ -762,7 +762,7 @@ namespace TinyGuard
                 if (line != null && line != "enabled=" + (eng.S.Enabled ? "1" : "0"))
                 {
                     eng.S.Save();
-                    sh.Raise("TinyGuard's settings were changed", "Something edited TinyGuard's settings file to switch protection " + (line == "enabled=0" ? "off" : "on") + ". TinyGuard put its own setting back.", true);
+                    sh.Raise("Visually Safe's settings were changed", "Something edited Visually Safe's settings file to switch protection " + (line == "enabled=0" ? "off" : "on") + ". Visually Safe put its own setting back.", true);
                 }
             }
             catch { }
@@ -790,7 +790,7 @@ namespace TinyGuard
             else if (!on && WatchdogExists()) Schtasks("/delete /tn \"" + WatchdogTask + "\" /f");
         }
 
-        /// <summary>What the scheduled task runs: start TinyGuard again if it isn't running and you didn't close it yourself.</summary>
+        /// <summary>What the scheduled task runs: start Visually Safe again if it isn't running and you didn't close it yourself.</summary>
         public static int WatchdogRun(string dataDir)
         {
             try
@@ -806,7 +806,7 @@ namespace TinyGuard
             return 0;
         }
 
-        // ---- optional: other programs can't end TinyGuard
+        // ---- optional: other programs can't end Visually Safe
 
         [DllImport("advapi32.dll", SetLastError = true)] static extern bool SetKernelObjectSecurity(IntPtr handle, int info, byte[] sd);
 

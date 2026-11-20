@@ -74,7 +74,7 @@ namespace TinyGuard
             bLog.Click += (s, e) =>
             {
                 if (File.Exists(tools.LogFile)) try { Process.Start("notepad.exe", "\"" + tools.LogFile + "\""); } catch { }
-                else MessageBox.Show(FindForm(), "There's no log yet. Run a test first.", "TinyGuard");
+                else MessageBox.Show(FindForm(), "There's no log yet. Run a test first.", "Visually Safe");
             };
             bCopy.Click += (s, e) =>
             {
@@ -116,10 +116,10 @@ namespace TinyGuard
                 menu.Items.Add(new ToolStripSeparator());
                 menu.Items.Add(item("Block THIS program's internet", () =>
                 {
-                    if (string.Equals(exe, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase)) { MessageBox.Show(FindForm(), "TinyGuard can't block itself.", "TinyGuard"); return; }
-                    if (!(eng.Net != null && eng.Net.Running)) { MessageBox.Show(FindForm(), "Blocking needs TinyGuard to run as administrator.", "TinyGuard"); return; }
+                    if (string.Equals(exe, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase)) { MessageBox.Show(FindForm(), "Visually Safe can't block itself.", "Visually Safe"); return; }
+                    if (!(eng.Net != null && eng.Net.Running)) { MessageBox.Show(FindForm(), "Blocking needs Visually Safe to run as administrator.", "Visually Safe"); return; }
                     string err = Firewall.Block(exe);
-                    MessageBox.Show(FindForm(), err == null ? "Blocked: " + exe + "\n\nUndo it from the Network page (Alt+click the program > Resume)." : "Windows Firewall said: " + err, "TinyGuard");
+                    MessageBox.Show(FindForm(), err == null ? "Blocked: " + exe + "\n\nUndo it from the Network page (Alt+click the program > Resume)." : "Windows Firewall said: " + err, "Visually Safe");
                 }));
                 menu.Items.Add(item("Show where it is on disk", () => { try { if (File.Exists(exe)) Process.Start("explorer.exe", "/select,\"" + exe + "\""); } catch { } }));
             }
@@ -131,14 +131,14 @@ namespace TinyGuard
                 bool portIgnored = rules.Contains(pr, StringComparer.OrdinalIgnoreCase), progIgnored = gr != null && rules.Contains(gr, StringComparer.OrdinalIgnoreCase);
                 string again = "Run the test again to update the list.";
                 if (portIgnored || progIgnored)
-                    menu.Items.Add(item("Stop ignoring this " + (portIgnored ? "port" : "program"), () => { tools.RemoveIgnore(portIgnored ? pr : gr); MessageBox.Show(FindForm(), "Done. " + again, "TinyGuard"); }));
+                    menu.Items.Add(item("Stop ignoring this " + (portIgnored ? "port" : "program"), () => { tools.RemoveIgnore(portIgnored ? pr : gr); MessageBox.Show(FindForm(), "Done. " + again, "Visually Safe"); }));
                 else
                 {
-                    menu.Items.Add(item("Ignore this port (" + r.Proto + " " + r.Port + ")", () => { tools.AddIgnore(pr); MessageBox.Show(FindForm(), r.Proto + " " + r.Port + " will show as ignored, not a warning. " + again, "TinyGuard"); }));
-                    if (gr != null) menu.Items.Add(item("Ignore this program (" + System.IO.Path.GetFileName(r.Prog) + ")", () => { tools.AddIgnore(gr); MessageBox.Show(FindForm(), System.IO.Path.GetFileName(r.Prog) + " will show as ignored. " + again, "TinyGuard"); }));
+                    menu.Items.Add(item("Ignore this port (" + r.Proto + " " + r.Port + ")", () => { tools.AddIgnore(pr); MessageBox.Show(FindForm(), r.Proto + " " + r.Port + " will show as ignored, not a warning. " + again, "Visually Safe"); }));
+                    if (gr != null) menu.Items.Add(item("Ignore this program (" + System.IO.Path.GetFileName(r.Prog) + ")", () => { tools.AddIgnore(gr); MessageBox.Show(FindForm(), System.IO.Path.GetFileName(r.Prog) + " will show as ignored. " + again, "Visually Safe"); }));
                 }
                 if (r.Ignored && !portIgnored && !progIgnored)
-                    menu.Items.Add(item("Turn off the built-in Windows ignore list", () => { tools.AddIgnore("nodefaults"); MessageBox.Show(FindForm(), "Common Windows ports and programs will be flagged again next time.", "TinyGuard"); }));
+                    menu.Items.Add(item("Turn off the built-in Windows ignore list", () => { tools.AddIgnore("nodefaults"); MessageBox.Show(FindForm(), "Common Windows ports and programs will be flagged again next time.", "Visually Safe"); }));
             }
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(item("Copy this result", () => { try { Clipboard.SetText(r.Title + (r.Detail.Length > 0 ? " — " + r.Detail : "")); } catch { } }));

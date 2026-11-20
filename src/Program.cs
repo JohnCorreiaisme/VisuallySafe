@@ -24,7 +24,7 @@ namespace TinyGuard
         GuardState shown = (GuardState)(-1);
         DateTime exitAt = DateTime.MaxValue, lastNet = DateTime.MinValue, lastIdle = DateTime.MinValue;
 
-        /// <summary>Restart TinyGuard as administrator (Windows shows its permission prompt once).</summary>
+        /// <summary>Restart Visually Safe as administrator (Windows shows its permission prompt once).</summary>
         void Elevate()
         {
             try
@@ -51,7 +51,7 @@ namespace TinyGuard
             if (exitAfterSeconds > 0) exitAt = DateTime.Now.AddSeconds(exitAfterSeconds);
 
             var menu = Menus.Make();
-            var open = new ToolStripMenuItem("Open TinyGuard", null, (s, e) => ShowForm(0));
+            var open = new ToolStripMenuItem("Open Visually Safe", null, (s, e) => ShowForm(0));
             open.Font = new Font(open.Font, FontStyle.Bold);
             mOn = new ToolStripMenuItem("Protection on", null, (s, e) => eng.SetEnabled(!eng.S.Enabled));
             mResume = new ToolStripMenuItem("Resume now", null, (s, e) => eng.SetEnabled(true));
@@ -70,16 +70,16 @@ namespace TinyGuard
                 new ToolStripMenuItem("Start screen saver now", null, (s, e) => ScreenSaver.Start(eng, null)),
                 new ToolStripMenuItem("Start defrag screen saver now", null, (s, e) => ScreenSaver.Start(eng, null, "defrag")),
                 (mGlow = new ToolStripMenuItem("Light up icons while scanning", null, (s, e) => { eng.S.ScanGlow = !eng.S.ScanGlow; eng.S.Save(); })),
-                (mShell = new ToolStripMenuItem("\"Scan with TinyGuard\" in right-click menu", null, (s, e) => ShellMenu.Toggle(eng))),
-                new ToolStripMenuItem("Update TinyGuard with AI…", null, (s, e) => { var f = new SelfUpdateForm(eng); f.Show(); f.Activate(); }),
+                (mShell = new ToolStripMenuItem("\"Scan with Visually Safe\" in right-click menu", null, (s, e) => ShellMenu.Toggle(eng))),
+                new ToolStripMenuItem("Update Visually Safe with AI…", null, (s, e) => { var f = new SelfUpdateForm(eng); f.Show(); f.Activate(); }),
                 new ToolStripMenuItem("Microsoft Defender: status", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.StatusText()).ContinueWith(t => tray.ShowBalloonTip(9000, "Microsoft Defender", t.Result, ToolTipIcon.Info))),
                 new ToolStripMenuItem("Microsoft Defender: update definitions now", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.UpdateSignatures()).ContinueWith(t => tray.ShowBalloonTip(6000, "Microsoft Defender", t.Result != null ? "Definitions are up to date." : "Could not update them just now.", ToolTipIcon.Info))),
                 new ToolStripMenuItem("Wake the wizard", null, (s, e) => Wizard.Wake()),
-                new ToolStripMenuItem("Support TinyGuard (Ko-fi)", null, (s, e) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } }),
+                new ToolStripMenuItem("Support Visually Safe (Ko-fi)", null, (s, e) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://ko-fi.com/johncorreia9791") { UseShellExecute = true }); } catch { } }),
                 new ToolStripMenuItem("Family helper mode…", null, (s, e) => { var f = new HelperSetupForm(eng); f.Show(); f.Activate(); }),
                 new ToolStripSeparator(),
                 mStartup,
-                new ToolStripMenuItem("Exit TinyGuard", null, (s, e) => Quit())
+                new ToolStripMenuItem("Exit Visually Safe", null, (s, e) => Quit())
             });
             menu.Opening += (s, e) =>
             {
@@ -174,7 +174,7 @@ namespace TinyGuard
             if (st == shown) return;
             shown = st;
             tray.Icon = icons[st];
-            tray.Text = "TinyGuard — " + (st == GuardState.Protected ? "protecting" : st == GuardState.Paused ? "paused" : st == GuardState.Off ? "off" : "threat found");
+            tray.Text = "Visually Safe — " + (st == GuardState.Protected ? "protecting" : st == GuardState.Paused ? "paused" : st == GuardState.Off ? "off" : "threat found");
             form.RefreshAll(true);
         }
 
@@ -212,9 +212,9 @@ namespace TinyGuard
                 {
                     form.BeginInvoke(new Action(() =>
                     {
-                        if (sel == null || sel.Count == 0) { tray.ShowBalloonTip(3000, "TinyGuard", "Nothing is selected. Select some icons on the Desktop or in a folder first, then press Ctrl+Alt+S.", ToolTipIcon.Info); return; }
+                        if (sel == null || sel.Count == 0) { tray.ShowBalloonTip(3000, "Visually Safe", "Nothing is selected. Select some icons on the Desktop or in a folder first, then press Ctrl+Alt+S.", ToolTipIcon.Info); return; }
                         foreach (string p in sel) eng.ScanNow(p);
-                        tray.ShowBalloonTip(3000, "TinyGuard", "Scanning " + sel.Count + " selected item" + (sel.Count == 1 ? "" : "s") + ".", ToolTipIcon.Info);
+                        tray.ShowBalloonTip(3000, "Visually Safe", "Scanning " + sel.Count + " selected item" + (sel.Count == 1 ? "" : "s") + ".", ToolTipIcon.Info);
                     }));
                 }
                 catch { }
@@ -255,7 +255,7 @@ namespace TinyGuard
         }
     }
 
-    /// <summary>Runs only the screen saver (when Windows starts TinyGuard.scr and TinyGuard isn't already running).</summary>
+    /// <summary>Runs only the screen saver (when Windows starts TinyGuard.scr and Visually Safe isn't already running).</summary>
     /// <summary>A system-wide hotkey (Ctrl+Alt+S) that scans whatever icons are selected.</summary>
     class HotKeyWindow : NativeWindow, IDisposable
     {
@@ -264,7 +264,7 @@ namespace TinyGuard
         public event Action Pressed;
         public bool Ok;
         public HotKeyWindow() { CreateHandle(new CreateParams()); Retry(); }   // Ctrl+Alt+S, no auto-repeat
-        /// <summary>Registers the hotkey if it isn't yet (another program may hold it for a moment, e.g. the copy of TinyGuard that was just closed).</summary>
+        /// <summary>Registers the hotkey if it isn't yet (another program may hold it for a moment, e.g. the copy of Visually Safe that was just closed).</summary>
         public void Retry() { if (!Ok) Ok = RegisterHotKey(Handle, 1, 0x2 | 0x1 | 0x4000, (int)Keys.S); }
         protected override void WndProc(ref Message m) { if (m.Msg == 0x0312 && Pressed != null) Pressed(); base.WndProc(ref m); }
         public void Dispose() { try { UnregisterHotKey(Handle, 1); DestroyHandle(); } catch { } }
@@ -294,7 +294,7 @@ namespace TinyGuard
 
         static string CliAction(string sw, string path)
         {
-            if (string.Equals(path, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase)) return "Refused: that is TinyGuard itself.";
+            if (string.Equals(path, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase)) return "Refused: that is Visually Safe itself.";
             if (sw == "--net-block" || sw == "--net-unblock")
             {
                 if (!Admin.IsAdmin) return "Failed: this needs administrator rights (run the command from an elevated prompt).";
@@ -324,7 +324,7 @@ namespace TinyGuard
                 dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TinyGuard");
             dataDir = Path.GetFullPath(dataDir);
             Directory.CreateDirectory(dataDir);
-            // Write anything that would crash TinyGuard to crash.log, so a silent exit can be explained.
+            // Write anything that would crash Visually Safe to crash.log, so a silent exit can be explained.
             string crashLog = Path.Combine(dataDir, "crash.log");
             Action<string, object> logCrash = (where, ex) =>
             {
@@ -342,7 +342,7 @@ namespace TinyGuard
                 try { File.AppendAllText(Path.Combine(dataDir, "agent-actions.log"), DateTime.Now.ToString("s") + " " + sw + " " + target + " -> " + msg + Environment.NewLine); } catch { }
                 return msg.StartsWith("OK") ? 0 : 1;
             }
-            if (Array.IndexOf(args, "--watchdog") >= 0) return SelfGuard.WatchdogRun(dataDir);     // from the scheduled task: bring TinyGuard back if it was killed
+            if (Array.IndexOf(args, "--watchdog") >= 0) return SelfGuard.WatchdogRun(dataDir);     // from the scheduled task: bring Visually Safe back if it was killed
             AppDomain.CurrentDomain.UnhandledException += (s, e) => logCrash("unhandled", e.ExceptionObject);
             Application.ThreadException += (s, e) => logCrash("ui", e.Exception);
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -563,7 +563,7 @@ namespace TinyGuard
                     {
                         new ProposedAction { Type = "quarantine", Path = rec.FilePath, Reason = "Locks it away so it can't run.", Risk = "Can be undone", Recommended = true },
                         new ProposedAction { Type = "update", Path = rec.FilePath, Reason = "A newer version may not have this problem.", Risk = "Installs the newer version with winget", Pkg = new Pkg { Name = "Example App", Version = "1.0", Available = "1.2" } },
-                        new ProposedAction { Type = "ignore", Reason = "You decide this one is fine.", Risk = "TinyGuard will trust this file" },
+                        new ProposedAction { Type = "ignore", Reason = "You decide this one is fine.", Risk = "Visually Safe will trust this file" },
                         new ProposedAction { Type = "delete", Path = rec.FilePath, Reason = "Removes it for good.", Risk = "Permanent, can't be undone", Permanent = true },
                     };
                     using (var of = new FixOptionsForm(rec.Name, "This file pretends to be a PDF but is really a program, a common trick for spreading malware.", opts))
@@ -1041,16 +1041,16 @@ namespace TinyGuard
             string a0 = args.Length > 0 ? args[0].ToLowerInvariant() : "";
             if (a0.StartsWith("/p") || a0.StartsWith("-p")) return 0;
             bool saverArg = a0.StartsWith("/s") || a0.StartsWith("-s") || a0 == "--saver", cfgArg = a0.StartsWith("/c") || a0.StartsWith("-c");
-            string scanArg = Arg(args, "--scan-file");     // from the right-click menu: hand the file to the running TinyGuard
+            string scanArg = Arg(args, "--scan-file");     // from the right-click menu: hand the file to the running Visually Safe
             if (scanArg != null)
             {
                 if (!SaverPipe.TryClient(dataDir, "SCAN|" + Path.GetFullPath(scanArg), true))
-                    MessageBox.Show("TinyGuard isn't running. Start it from the Start menu, then try again.", "TinyGuard", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("Visually Safe isn't running. Start it from the Start menu, then try again.", "Visually Safe", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return 0;
             }
             // the defrag screen saver is the same program under another name (TinyGuardDefrag.scr)
             string saverCmd = Path.GetFileNameWithoutExtension(Application.ExecutablePath).IndexOf("Defrag", StringComparison.OrdinalIgnoreCase) >= 0 || args.Contains("--defrag-saver") ? "SAVER-DEFRAG" : "SAVER";
-            if (saverArg && SaverPipe.TryClient(dataDir, saverCmd, true)) return 0;     // the running TinyGuard shows it
+            if (saverArg && SaverPipe.TryClient(dataDir, saverCmd, true)) return 0;     // the running Visually Safe shows it
             if (cfgArg && SaverPipe.TryClient(dataDir, "SETTINGS", false)) return 0;
 
             // After "Turn on network monitor" the old copy is still closing; wait for it before taking over.
@@ -1066,13 +1066,13 @@ namespace TinyGuard
                 {
                     // already running: just bring its window forward
                     if (exitAfter == 0 && !SaverPipe.TryClient(dataDir, "SHOW", false))
-                        MessageBox.Show("TinyGuard is already running. Look for the shield next to the clock.", "TinyGuard");
+                        MessageBox.Show("Visually Safe is already running. Look for the shield next to the clock.", "Visually Safe");
                     return 2;
                 }
                 var engine = new Engine(dataDir);
                 if (saverArg)
                 {
-                    // TinyGuard wasn't running: run just the screen saver, then leave
+                    // Visually Safe wasn't running: run just the screen saver, then leave
                     Application.Run(new SaverOnly(engine, SaverPipe.ModeOf(saverCmd)));
                     return 0;
                 }

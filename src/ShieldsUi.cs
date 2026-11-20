@@ -49,8 +49,8 @@ namespace TinyGuard
             bFeed.Bounds = new Rectangle(510, 378, 132, 28);
 
             Controls.Add(Head("Self-protection", 436));
-            cGuard = Check("Warn if TinyGuard's files or settings are changed, and restart it if it is killed", 460);
-            cProtect = Check("Stop other programs from ending TinyGuard (advanced; use the tray menu's Exit)", 484);
+            cGuard = Check("Warn if Visually Safe's files or settings are changed, and restart it if it is killed", 460);
+            cProtect = Check("Stop other programs from ending Visually Safe (advanced; use the tray menu's Exit)", 484);
             lGuard = Small(510);
 
             Controls.AddRange(new Control[] { cRansom, cStop, lRansom, events, bTest, cWeb, lWeb, bUpdate, bRemove, tDomain, bCheck, bBlock, bAllow, lWebResult, lFeed, bFeed, cGuard, cProtect, lGuard });
@@ -76,13 +76,13 @@ namespace TinyGuard
                 if (loading) return;
                 if (cWeb.Checked)
                 {
-                    if (!Admin.IsAdmin) { MessageBox.Show(FindForm(), "Blocking websites changes the Windows hosts file, which needs TinyGuard to run as administrator.", "TinyGuard"); loading = true; cWeb.Checked = false; loading = false; return; }
+                    if (!Admin.IsAdmin) { MessageBox.Show(FindForm(), "Blocking websites changes the Windows hosts file, which needs Visually Safe to run as administrator.", "Visually Safe"); loading = true; cWeb.Checked = false; loading = false; return; }
                     eng.S.WebShield = true; eng.S.Save(); eng.Shield.UpdateFeeds(true, false);
                 }
-                else { eng.S.WebShield = false; eng.S.Save(); string err = eng.Shield.Web.Remove(); if (err != null) MessageBox.Show(FindForm(), err, "TinyGuard"); }
+                else { eng.S.WebShield = false; eng.S.Save(); string err = eng.Shield.Web.Remove(); if (err != null) MessageBox.Show(FindForm(), err, "Visually Safe"); }
             };
-            bUpdate.Click += (s, e) => { if (!Admin.IsAdmin) { MessageBox.Show(FindForm(), "This needs TinyGuard to run as administrator.", "TinyGuard"); return; } eng.S.WebShield = true; eng.S.Save(); eng.Shield.UpdateFeeds(true, false); lWeb.Text = "Downloading the lists…"; };
-            bRemove.Click += (s, e) => { string err = eng.Shield.Web.Remove(); eng.S.WebShield = false; eng.S.Save(); if (err != null) MessageBox.Show(FindForm(), err, "TinyGuard"); };
+            bUpdate.Click += (s, e) => { if (!Admin.IsAdmin) { MessageBox.Show(FindForm(), "This needs Visually Safe to run as administrator.", "Visually Safe"); return; } eng.S.WebShield = true; eng.S.Save(); eng.Shield.UpdateFeeds(true, false); lWeb.Text = "Downloading the lists…"; };
+            bRemove.Click += (s, e) => { string err = eng.Shield.Web.Remove(); eng.S.WebShield = false; eng.S.Save(); if (err != null) MessageBox.Show(FindForm(), err, "Visually Safe"); };
             bCheck.Click += (s, e) =>
             {
                 string d = tDomain.Text.Trim().ToLowerInvariant();
@@ -94,7 +94,7 @@ namespace TinyGuard
             bBlock.Click += (s, e) => Custom(true);
             bAllow.Click += (s, e) => Custom(false);
 
-            bFeed.Click += (s, e) => { if (eng.S.MbKey.Length == 0) { MessageBox.Show(FindForm(), "This list needs your free abuse.ch key. Paste it on the Settings page (\"MalwareBazaar key\").", "TinyGuard"); return; } eng.Shield.UpdateFeeds(false, true); lFeed.Text = "Downloading…"; };
+            bFeed.Click += (s, e) => { if (eng.S.MbKey.Length == 0) { MessageBox.Show(FindForm(), "This list needs your free abuse.ch key. Paste it on the Settings page (\"MalwareBazaar key\").", "Visually Safe"); return; } eng.Shield.UpdateFeeds(false, true); lFeed.Text = "Downloading…"; };
 
             cGuard.CheckedChanged += (s, e) => { if (loading) return; eng.S.SelfGuard = cGuard.Checked; eng.S.Save(); if (Admin.IsAdmin) Task.Run(() => eng.Shield.Guard.EnsureWatchdog(cGuard.Checked)); watchdogAsked = DateTime.MinValue; };
             cProtect.CheckedChanged += (s, e) => { if (loading) return; eng.S.ProtectProcess = cProtect.Checked; eng.S.Save(); eng.Shield.Guard.ApplyProcessProtection(cProtect.Checked); };
@@ -146,7 +146,7 @@ namespace TinyGuard
                 lFeed.ForeColor = eng.S.MbKey.Length == 0 ? Theme.Muted : Theme.Green;
 
                 if (Admin.IsAdmin && (DateTime.Now - watchdogAsked).TotalSeconds > 30) { watchdogAsked = DateTime.Now; Task.Run(() => { bool ex = SelfGuard.WatchdogExists(); watchdog = ex; }); }
-                lGuard.Text = !Admin.IsAdmin ? "Run TinyGuard as administrator for the restart-if-killed guard." : eng.S.SelfGuard ? (watchdog ? "Guard is on: a scheduled task starts TinyGuard again within 2 minutes if something kills it (not if you use Exit)." : "Setting up the restart guard…") : "Off";
+                lGuard.Text = !Admin.IsAdmin ? "Run Visually Safe as administrator for the restart-if-killed guard." : eng.S.SelfGuard ? (watchdog ? "Guard is on: a scheduled task starts Visually Safe again within 2 minutes if something kills it (not if you use Exit)." : "Setting up the restart guard…") : "Off";
                 lGuard.ForeColor = Admin.IsAdmin && eng.S.SelfGuard && watchdog ? Theme.Green : Theme.Muted;
             }
             finally { loading = false; }

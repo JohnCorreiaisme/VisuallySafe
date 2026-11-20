@@ -21,7 +21,7 @@ namespace TinyGuard
     class NetResult { public NSev Sev; public string Title = "", Detail = ""; public string Proto = "", Prog = ""; public int Port; public bool Ignored; public string IgnoreWhy = ""; }
 
     /// <summary>
-    /// TinyGuard's own network toolbox: health check, listening ports, device finder, port scanner, ping, traceroute, DNS lookup.
+    /// Visually Safe's own network toolbox: health check, listening ports, device finder, port scanner, ping, traceroute, DNS lookup.
     /// Every result is also written to network-log.txt in the data folder.
     /// </summary>
     class NetTools

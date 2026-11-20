@@ -70,7 +70,7 @@ namespace TinyGuard
             radios[0].Checked = true;
             if (Admin.IsAdmin)
             {
-                var adm = new Label { Text = "TinyGuard is running as administrator, so the agent starts with administrator rights too.", ForeColor = Theme.Red, AutoSize = true, MaximumSize = new Size(w, 0), Location = new Point(x, y) };
+                var adm = new Label { Text = "Visually Safe is running as administrator, so the agent starts with administrator rights too.", ForeColor = Theme.Red, AutoSize = true, MaximumSize = new Size(w, 0), Location = new Point(x, y) };
                 Controls.Add(adm); y += adm.PreferredHeight + S(8);
             }
 
@@ -203,7 +203,7 @@ namespace TinyGuard
                 {
                     if (cts.IsCancellationRequested) { ok = false; break; }
                     string exe = st[0] == "@npm" ? Agents.FindNpm() : st[0];
-                    if (string.IsNullOrEmpty(exe)) { lines.Enqueue("npm still can't be found after installing Node.js. Restart TinyGuard and try again."); ok = false; break; }
+                    if (string.IsNullOrEmpty(exe)) { lines.Enqueue("npm still can't be found after installing Node.js. Restart Visually Safe and try again."); ok = false; break; }
                     lines.Enqueue("> " + System.IO.Path.GetFileName(exe) + " " + st[1]);
                     try
                     {
@@ -285,7 +285,7 @@ namespace TinyGuard
             var now = Agents.Detect(true).First(x => x.Id == agent.Id);
             if (!ok || !now.Found)
             {
-                MessageBox.Show(owner, agent.Name + " wasn't installed. The text in the install window says why.", "TinyGuard", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(owner, agent.Name + " wasn't installed. The text in the install window says why.", "Visually Safe", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
             if (MessageBox.Show(owner, agent.Name + " is installed (" + now.Version + ").\n\nIt needs you to sign in once. Open it now to sign in?", "Installed", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
@@ -319,7 +319,7 @@ namespace TinyGuard
             }
             catch (Exception ex)
             {
-                MessageBox.Show(owner, "Couldn't start " + agent.Name + ":\n\n" + ex.GetBaseException().Message, "TinyGuard", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(owner, "Couldn't start " + agent.Name + ":\n\n" + ex.GetBaseException().Message, "Visually Safe", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
     }

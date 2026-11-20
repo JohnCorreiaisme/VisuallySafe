@@ -59,7 +59,7 @@ namespace TinyGuard
             };
             Controls.AddRange(new Control[] { list, empty, bBlock, bUnblock, bShow });
 
-            // Shown instead of the list when TinyGuard isn't running with administrator rights.
+            // Shown instead of the list when Visually Safe isn't running with administrator rights.
             needAdmin = new Panel { Bounds = new Rectangle(28, 100, 614, 210), BackColor = Theme.Card };
             var why = new Label
             {
@@ -112,10 +112,10 @@ namespace TinyGuard
         void Pause(AppTraffic a, TimeSpan? span)
         {
             if (!a.CanBlock) return;
-            if (string.Equals(a.Path, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase)) { MessageBox.Show(FindForm(), "TinyGuard can't pause its own internet.", "TinyGuard"); return; }
-            if (!(eng.Net != null && eng.Net.Running)) { MessageBox.Show(FindForm(), "Pausing needs TinyGuard to run as administrator.", "TinyGuard"); return; }
+            if (string.Equals(a.Path, Application.ExecutablePath, StringComparison.OrdinalIgnoreCase)) { MessageBox.Show(FindForm(), "Visually Safe can't pause its own internet.", "Visually Safe"); return; }
+            if (!(eng.Net != null && eng.Net.Running)) { MessageBox.Show(FindForm(), "Pausing needs Visually Safe to run as administrator.", "Visually Safe"); return; }
             string err = Firewall.Block(a.Path);
-            if (err != null) { MessageBox.Show(FindForm(), "Windows Firewall said: " + err, "TinyGuard"); return; }
+            if (err != null) { MessageBox.Show(FindForm(), "Windows Firewall said: " + err, "Visually Safe"); return; }
             LoadPauses();
             if (span.HasValue) pausedUntil[a.Path] = DateTime.Now + span.Value; else pausedUntil.Remove(a.Path);
             SavePauses();
@@ -125,7 +125,7 @@ namespace TinyGuard
         void Resume(AppTraffic a)
         {
             string err = Firewall.Unblock(a.Path);
-            if (err != null) MessageBox.Show(FindForm(), "Windows Firewall said: " + err, "TinyGuard");
+            if (err != null) MessageBox.Show(FindForm(), "Windows Firewall said: " + err, "Visually Safe");
             LoadPauses(); pausedUntil.Remove(a.Path); SavePauses();
             blockedRead = DateTime.MinValue; RefreshNow();
         }
@@ -182,7 +182,7 @@ namespace TinyGuard
                     "\n\nIt won't be able to download or upload until you unblock it here. Connections it already has open may last until it restarts.",
                     "Block internet", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
             string err = block ? Firewall.Block(a.Path) : Firewall.Unblock(a.Path);
-            if (err != null) MessageBox.Show(FindForm(), "Windows Firewall said: " + err, "TinyGuard");
+            if (err != null) MessageBox.Show(FindForm(), "Windows Firewall said: " + err, "Visually Safe");
             blockedRead = DateTime.MinValue;
             RefreshNow();
         }

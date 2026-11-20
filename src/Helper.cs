@@ -264,7 +264,7 @@ namespace TinyGuard
 
         public static string TestMail()
         {
-            return SendMail("TinyGuard helper test", "This is a test message from the family helper on " + Environment.MachineName + ".");
+            return SendMail("Visually Safe helper test", "This is a test message from the family helper on " + Environment.MachineName + ".");
         }
 
         public static void Notify(string subject, string body) { Mail(subject, body); }

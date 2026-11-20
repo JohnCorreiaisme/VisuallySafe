@@ -8,7 +8,7 @@ using System.Threading;
 namespace TinyGuard
 {
     /// <summary>Microsoft Defender's own verdict on a file, asked through its command-line scanner (MpCmdRun.exe).
-    /// Report only: -DisableRemediation means Defender never removes anything on TinyGuard's behalf.</summary>
+    /// Report only: -DisableRemediation means Defender never removes anything on Visually Safe's behalf.</summary>
     static class DefenderLink
     {
         public class Answer { public bool Threat; public string Name = ""; public bool Ml; }
@@ -151,7 +151,7 @@ namespace TinyGuard
         public static volatile bool Running;
         static Process scanProc; static volatile bool cancelled;
 
-        /// <summary>Ask Windows to stop the scan TinyGuard started (only that one: it is stopped by its own process, never by name).</summary>
+        /// <summary>Ask Windows to stop the scan Visually Safe started (only that one: it is stopped by its own process, never by name).</summary>
         public static void CancelScan()
         {
             var p = scanProc; string mp = Exe;

@@ -127,7 +127,7 @@ namespace TinyGuard
             {
                 try { ProcessTrace(new[] { h }, 1, IntPtr.Zero, IntPtr.Zero); } catch { }
                 CloseTrace(h);
-            }) { IsBackground = true, Name = "TinyGuard network events" };
+            }) { IsBackground = true, Name = "Visually Safe network events" };
             pump.Start();
             Running = true;
             Error = null;
@@ -321,7 +321,7 @@ namespace TinyGuard
                 {
                     dynamic rule = Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
                     rule.Name = "TinyGuard block " + (dir == 2 ? "out" : "in") + ": " + path;
-                    rule.Description = "Added by TinyGuard. Unblock it from TinyGuard's Network page.";
+                    rule.Description = "Added by TinyGuard. Unblock it from Visually Safe's Network page.";
                     rule.ApplicationName = path;
                     rule.Action = 0;           // block
                     rule.Direction = dir;

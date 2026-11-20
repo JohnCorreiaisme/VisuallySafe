@@ -1,6 +1,8 @@
-# TinyGuard
+# Visually Safe
 
-**A friendly helper for Windows' built-in protection.** TinyGuard puts an easy face on Microsoft Defender, made for people who find computers confusing. A small wizard walks along the taskbar, speaks in the Windows voice, and tells you in plain words what your computer is doing, whether it is okay, and when something needs attention. A family member or carer can set it up for someone else.
+_Formerly called TinyGuard._
+
+**A helpful antivirus companion.** Visually Safe puts an easy face on Microsoft Defender, made for people who find computers confusing. A small wizard walks along the taskbar, speaks in the Windows voice, and tells you in plain words what your computer is doing, whether it is okay, and when something needs attention. A family member or carer can set it up for someone else.
 
 It works **alongside Microsoft Defender and does not replace it.** It is not made by, endorsed by, or connected to Microsoft.
 
@@ -9,7 +11,7 @@ Works on Windows 10 and Windows 11.
 ## What it does
 
 - **"Is my computer okay?"**: a green, yellow or red answer, spoken and shown, taken from Windows' own protection status. A *Fix it* button updates Windows' protection and starts a Windows scan.
-- **Reads Windows' protection out loud**: scans starting and finishing, and anything Windows or TinyGuard finds, in everyday words. The family member can get an email.
+- **Reads Windows' protection out loud**: scans starting and finishing, and anything Windows or Visually Safe finds, in everyday words. The family member can get an email.
 - **Boxes on your icons**: a swirling ring while a file is checked, then a green tick, yellow "!" or red box when you hover over it. The wizard explains what they mean.
 - **Twice-a-week check** (Mondays and Thursdays): updates the protection and checks the Desktop and Downloads. It also notices new programs that set themselves to start with Windows.
 - **Ask the wizard anything**, by typing or speaking. Answers come from an AI you choose that runs on your own PC (LM Studio, Ollama and similar), so nothing is sent to a company.
@@ -17,7 +19,7 @@ Works on Windows 10 and Windows 11.
 
 ## Install
 
-Run **TinyGuardSetup** and follow the pages. It explains the Windows permission box before it appears, asks who the wizard is for (so a family member can set it up for someone else), and puts TinyGuard in Program Files with a Start menu entry. Remove it later from Windows Settings, then Apps. Your settings are kept.
+Run **VisuallySafeSetup** and follow the pages. It explains the Windows permission box before it appears, asks who the wizard is for (so a family member can set it up for someone else), and puts Visually Safe in Program Files with a Start menu entry. Remove it later from Windows Settings, then Apps. Your settings are kept.
 
 Windows may show "Windows protected your PC" because the installer is new and not yet signed: click *More info*, then *Run anyway*.
 
@@ -25,9 +27,9 @@ Build the installer yourself with `python tools/build_setup.py` (needs the .NET 
 
 ## Support
 
-TinyGuard is free. If it helps someone you care about and you would like to say thanks, you can [buy me a coffee on Ko-fi](https://ko-fi.com/johncorreia9791). Donations are never required and unlock nothing.
+Visually Safe is free. If it helps someone you care about and you would like to say thanks, you can [buy me a coffee on Ko-fi](https://ko-fi.com/johncorreia9791). Donations are never required and unlock nothing.
 
-[![Support TinyGuard on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/johncorreia9791)
+[![Support Visually Safe on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/johncorreia9791)
 
 ## Credits
 
@@ -35,7 +37,7 @@ The wizard character was made with Nano Banana and Tripo.
 
 ---
 
-TinyGuard also includes a small background file checker. It is a second opinion that runs
+Visually Safe also includes a small background file checker. It is a second opinion that runs
 alongside Windows Defender; it does not replace it.
 
 ## Run
@@ -63,11 +65,11 @@ When a program, script, macro document, shortcut or archive lands in a watched f
    MalwareBazaar (only if you add a free key), CIRCL hashlookup -> Malware or Known good.
 4. Nobody knows it: the YARA engine (`bin\yara\yara64.exe`, VirusTotal YARA 4.6.0) checks it
    against the YARA-Forge "core" rule set (`bin\yara\core.yar`, ~5,000 rules) plus your own
-   rules in `%LOCALAPPDATA%\TinyGuard\rules\*.yar`. A rule with `score` 80+ in its meta means
+   rules in `%LOCALAPPDATA%\Visually Safe\rules\*.yar`. A rule with `score` 80+ in its meta means
    Malware (quarantined); lower means Suspicious. Works on scripts too.
    Rule updates: once a day (first check 2 minutes after start, only while "Check files online"
-   is on) TinyGuard asks GitHub for the newest YARA-Forge release. A newer core set is
-   downloaded, test-compiled, and only then swapped in as `%LOCALAPPDATA%\TinyGuard\core.yar`
+   is on) Visually Safe asks GitHub for the newest YARA-Forge release. A newer core set is
+   downloaded, test-compiled, and only then swapped in as `%LOCALAPPDATA%\Visually Safe\core.yar`
    (it wins over the bundled copy). Settings shows the rules version and has an "Update rules" button.
 5. Still nobody knows it, and it is a program: the offline AI model (`bin\tinyguard.model`, 1.4 MB)
    scores it. 90% or more marks it Suspicious; lower scores are shown in Activity.
@@ -81,23 +83,23 @@ files only raise an alert.
 
 ## Programs as they start
 
-TinyGuard checks the process list every second (no admin rights needed) and runs each new
-program through the checks above; programs that were already running when TinyGuard started
+Visually Safe checks the process list every second (no admin rights needed) and runs each new
+program through the checks above; programs that were already running when Visually Safe started
 are checked too. Judged programs are remembered by path, size and date (`programs.tsv`) so they
 aren't re-hashed every launch. A program judged Malware is stopped (by its process ID, after
 re-checking its path) and quarantined, typically about 2 seconds after it starts. Safe programs
-stay out of Activity; first sightings of unknown programs are listed. TinyGuard's own folder
+stay out of Activity; first sightings of unknown programs are listed. Visually Safe's own folder
 is skipped.
 
 ## Network page (needs administrator rights)
 
 Live download and upload per program from Windows' kernel network events (TCP and UDP, so
 browser QUIC traffic too), with a one-minute graph per program and totals at the top.
-"Block internet" adds two Windows Firewall rules (inbound and outbound, group "TinyGuard") for
+"Block internet" adds two Windows Firewall rules (inbound and outbound, group "Visually Safe") for
 that program; "Unblock" removes them. Connections a program already has open may continue
 until it restarts.
 
-"Turn on network monitor" restarts TinyGuard as administrator (one Windows prompt). While it
+"Turn on network monitor" restarts Visually Safe as administrator (one Windows prompt). While it
 runs as administrator, "Start with Windows" uses a logon scheduled task with highest rights and
 no time limit, instead of the Run key.
 
@@ -117,18 +119,18 @@ it and could leave the file on disk). "Delete all" also removes leftover files t
 
 Finds AIs running on this PC (LM Studio :1234, Ollama :11434, Jan :1337, GPT4All :4891,
 text-generation-webui :5000, KoboldCpp :5001, llama.cpp/LocalAI :8080, vLLM :8000; localhost only, nothing
-leaves the machine) and lists their chat models. "Ask AI" sends TinyGuard's report (what needs action,
+leaves the machine) and lists their chat models. "Ask AI" sends Visually Safe's report (what needs action,
 recent checks, quarantine, rootkit findings, busiest network programs) with a fixed system prompt.
 The AI answers with an explanation plus a JSON list of proposed fixes, which appear as tick boxes.
 Allowed types: quarantine, delete, mark_safe, restore, delete_quarantined, block_internet,
-unblock_internet, add_safe_folder, run_rootkit_check. Every proposal is checked against TinyGuard's own
+unblock_internet, add_safe_folder, run_rootkit_check. Every proposal is checked against Visually Safe's own
 log (unknown files, anything under C:\Windows, too-broad folders and unknown types are shown as Rejected),
 nothing is ticked by default, and nothing runs until you click "Apply approved" and confirm.
 "Copy prompt for any AI" puts the same prompt on the clipboard (it contains file names and paths, so
 only paste it into an AI you trust) and "Paste AI's reply" reads the answer back into the same approval list.
 
 **Alt+click AI fix.** Alt+click a row on the Rootkit check, Activity or Quarantine page (or choose "AI fix…"
-in Activity's right-click menu). TinyGuard asks the AI chosen on the AI helper page (or the first one it
+in Activity's right-click menu). Visually Safe asks the AI chosen on the AI helper page (or the first one it
 finds) about that one item, with the whole report as context, then shows a Yes/No box with what the AI
 found and exactly what will be done. Only actions about the selected item are allowed (at most 2), and
 all the usual safety checks apply. Besides the actions above, a rootkit finding that is a Run-key startup
@@ -139,10 +141,10 @@ those the AI can only explain what to do by hand.
 ## Screen saver
 
 Settings > Screen saver. **Deep-scan slowly when I'm away** starts a full-screen display when the PC has been idle
-for the time you pick (1 to 30 minutes; not while a game or video is full screen, not on battery). **Use TinyGuard
+for the time you pick (1 to 30 minutes; not while a game or video is full screen, not on battery). **Use Visually Safe
 as the Windows screen saver** registers `TinyGuard.scr` (a copy of the exe) in Windows' own screen saver setting
 and remembers what was there before so turning it off puts it back; Windows then decides when it starts (and
-TinyGuard's own idle timer is switched off). **Start screen saver now** and the tray menu start it instantly.
+Visually Safe's own idle timer is switched off). **Start screen saver now** and the tray menu start it instantly.
 Moving the mouse or pressing a key ends it.
 
 While it runs: the Scan map fills the screen. The folder being deep-scanned pulses, the file glows with its name,
@@ -179,15 +181,15 @@ light up that file and draw a line through its pieces. **Analyze** runs `defrag 
 
 ## Fix with Claude Code or Codex
 
-TinyGuard can hand a problem to Claude Code (`claude`) or Codex (`codex`) installed on this PC. Use **Fix with
-agent** in an item's Properties window (Alt+click), or on the AI helper page to hand over everything. TinyGuard
+Visually Safe can hand a problem to Claude Code (`claude`) or Codex (`codex`) installed on this PC. Use **Fix with
+agent** in an item's Properties window (Alt+click), or on the AI helper page to hand over everything. Visually Safe
 finds the programs on PATH and in their usual install folders. Before anything starts a box shows the agent, how
 it will run, and the exact instructions it will be sent (they go to Anthropic/OpenAI through the agent you are
 signed in to). Modes: **terminal window** (recommended: the agent asks you before each step), **investigate
-read-only** (runs in the background, can't change anything, output shown in TinyGuard), or **fix without asking
+read-only** (runs in the background, can't change anything, output shown in Visually Safe), or **fix without asking
 again** (background, may change the PC). The instructions are written to `agent-workix-*.md` and tell the agent
-to treat everything TinyGuard collected as untrusted data, prefer reversible fixes (update, quarantine) and list
-every change with how to undo it. If TinyGuard runs as administrator the agent does too. Headless flags: Codex
+to treat everything Visually Safe collected as untrusted data, prefer reversible fixes (update, quarantine) and list
+every change with how to undo it. If Visually Safe runs as administrator the agent does too. Headless flags: Codex
 `exec -s read-only|danger-full-access`, Claude Code `-p --permission-mode plan|acceptEdits`.
 
 ## Alt+click properties and the fix choice box
@@ -207,7 +209,7 @@ inside (red malware, amber suspicious, green clean, grey unknown), the ring show
 means not scanned yet, and removed/quarantined files stay as marked ghosts where they were found. Click a folder
 to open it, drag and scroll to move around, Alt+click for properties. While scanning, the folder pulses with a
 sweeping arc, the file being scanned glows with its name and a moving beam, and the camera follows it (Follow: on).
-It is backed by `ledger.tsv`, a record of every file TinyGuard has examined.
+It is backed by `ledger.tsv`, a record of every file Visually Safe has examined.
 
 ## Net tools
 
@@ -229,7 +231,7 @@ A kernel rootkit can fool all of it, so the page also has a **Defender Offline s
 
 ## Files
 
-Everything lives in `%LOCALAPPDATA%\TinyGuard`: `settings.ini`, `history.tsv`, `cache.tsv`,
+Everything lives in `%LOCALAPPDATA%\Visually Safe`: `settings.ini`, `history.tsv`, `cache.tsv`,
 `programs.tsv`, `quarantine.tsv`, `Quarantine\`, `rules\`, and two lists you can edit by hand,
 one SHA-256 per line: `blocklist.txt` and `allowlist.txt`.
 
@@ -238,7 +240,7 @@ one SHA-256 per line: `blocklist.txt` and `allowlist.txt`.
 - The AI model never quarantines on its own; it only raises Suspicious.
 - Programs can't be stopped before they start (that needs a kernel driver); they are stopped
   right after.
-- Without admin rights malware with admin rights could stop TinyGuard; even with them, it is a
+- Without admin rights malware with admin rights could stop Visually Safe; even with them, it is a
   normal program, not a protected service.
 
 ## Developer switches
@@ -275,24 +277,24 @@ Tray > "Family helper mode...". For a relative's computer. Turning it on also tu
 - greets every few hours ("your kid asked me to watch over your computer, please contact them");
 - no network cable / Wi-Fi: asks them to plug it in (checks every 30 s, repeats every 10 min);
 - 10 or more unnamed text files ("New Text Document...", "Untitled...") on the Desktop, Documents, Downloads or profile folder, or C: under 10% free: says so (it never deletes anything);
-- a big "I need help" button: asks your **remote help server** (a URL you run; TinyGuard POSTs JSON with the computer and user name, and the server answers with `{"code":"123456"}` or just the code), shows the code in huge letters, reads it aloud, and emails it to you. With no server set it opens Windows Quick Assist and emails you that help was requested.
+- a big "I need help" button: asks your **remote help server** (a URL you run; Visually Safe POSTs JSON with the computer and user name, and the server answers with `{"code":"123456"}` or just the code), shows the code in huge letters, reads it aloud, and emails it to you. With no server set it opens Windows Quick Assist and emails you that help was requested.
 - Email uses your own SMTP server (settings in helper.ini; the password is protected with Windows DPAPI). Nothing connects without the person pressing the button.
 
 ## 1.0.8
 - Scan map: files that were found and then removed (quarantined or deleted) are now blue instead of red.
 
 ## 1.0.9: the scan light
-- While TinyGuard checks a file or folder, a light runs around the edge of its icon (in an Explorer window or on the Desktop), then flashes green (clean), blue (nothing to report) or red (found something). It is a see-through window that clicks pass through.
-- It happens for every new file or folder that appears in Downloads or on the Desktop, for programs opened from those folders for the first time, and for anything you choose "Scan with TinyGuard" on in the right-click menu (files and folders; on Windows 11 it is under "Show more options").
-- Tray menu: "Light up icons while scanning" and "Scan with TinyGuard in right-click menu" turn each on or off.
+- While Visually Safe checks a file or folder, a light runs around the edge of its icon (in an Explorer window or on the Desktop), then flashes green (clean), blue (nothing to report) or red (found something). It is a see-through window that clicks pass through.
+- It happens for every new file or folder that appears in Downloads or on the Desktop, for programs opened from those folders for the first time, and for anything you choose "Scan with Visually Safe" on in the right-click menu (files and folders; on Windows 11 it is under "Show more options").
+- Tray menu: "Light up icons while scanning" and "Scan with Visually Safe in right-click menu" turn each on or off.
 - Limit: Windows doesn't let a program hold a file back before it opens, so the light and the check run as the file opens; they can't delay it.
 
 ## 1.0.10
-- The scan light works on many files at once (select several files, right-click > Scan with TinyGuard; Windows only offers the menu entry for up to 15 files at a time. Everything that newly lands in Downloads or on the Desktop is handled automatically).
+- The scan light works on many files at once (select several files, right-click > Scan with Visually Safe; Windows only offers the menu entry for up to 15 files at a time. Everything that newly lands in Downloads or on the Desktop is handled automatically).
 - When a file is done the moving light goes away and a steady box stays round the icon with a small badge on its corner: green check = nothing found, yellow ! = suspicious, red X = infected. It stays until the icon scrolls away, the window closes or ten minutes pass, and hides while another window covers it. For a folder, the badge shows the worst result of the files inside.
 
 ## 1.0.11
-- TinyGuard no longer flags its own program files (its install folder and, when built from source, the bin and bin_new folders).
+- Visually Safe no longer flags its own program files (its install folder and, when built from source, the bin and bin_new folders).
 
 ## 1.0.12
 - AI helper page: more room above and around the Copy prompt / Paste reply buttons so they are not clipped.
@@ -300,17 +302,17 @@ Tray > "Family helper mode...". For a relative's computer. Turning it on also tu
 ## 1.0.13
 - AI helper page: fixed two text lines that were stretched far too wide and covered the top of the Copy prompt / Paste reply buttons.
 
-## 1.0.14: AI update (tray > "Update TinyGuard with AI...", or the button on the AI helper page)
-An AI agent is told what TinyGuard does (this README and the list of source files) and asked whether TinyGuard needs more as an antivirus; if so it makes up to three small changes. Steps: make a working copy of the source, ask Claude Code or Codex (or copy the prompt for any other AI), then "Check and build".
+## 1.0.14: AI update (tray > "Update Visually Safe with AI...", or the button on the AI helper page)
+An AI agent is told what Visually Safe does (this README and the list of source files) and asked whether Visually Safe needs more as an antivirus; if so it makes up to three small changes. Steps: make a working copy of the source, ask Claude Code or Codex (or copy the prompt for any other AI), then "Check and build".
 - The agent works only on the copy: Claude Code gets no command line (Read/Write/Edit/Glob/Grep only), Codex runs in a workspace-only sandbox.
-- TinyGuard then lists what changed, warns about new web addresses, new process/registry/download code, and large deletions, builds it, and runs the new program's self-test (a blocked file is caught, a script dropper is flagged, a harmless script and 30 normal Windows programs are not).
+- Visually Safe then lists what changed, warns about new web addresses, new process/registry/download code, and large deletions, builds it, and runs the new program's self-test (a blocked file is caught, a script dropper is flagged, a harmless script and 30 normal Windows programs are not).
 - `src/SelfUpdate.cs` and `src/SelfUpdateUi.cs` are protected: an update that changes them is refused.
-- Nothing is installed until you click Install. The old source is saved in `%LOCALAPPDATA%\TinyGuard\update\backup`, the old program is kept as `TinyGuard.exe.old`, and a hidden watcher puts it back if the new version isn't confirmed healthy after two minutes. The source is updated in the project folder but not committed to git (review with `git diff`).
+- Nothing is installed until you click Install. The old source is saved in `%LOCALAPPDATA%\Visually Safe\update\backup`, the old program is kept as `TinyGuard.exe.old`, and a hidden watcher puts it back if the new version isn't confirmed healthy after two minutes. The source is updated in the project folder but not committed to git (review with `git diff`).
 - Needs the source folder (TinyGuard.csproj) next to the program and the .NET SDK. The self-test and reading the summary are a safety net, not proof: read what it changed.
 - Also fixed: the Family helper window was not scaling on high-DPI screens.
 
 ## 1.0.15
-- Network page: Alt+click (or right-click) a program to pause its internet for 5 minutes, 30 minutes, 2 hours, or until you unblock it; resume now; open Properties or its folder. Paused programs show "Paused until ..." and are unblocked automatically when the time is up (even after a restart of TinyGuard).
+- Network page: Alt+click (or right-click) a program to pause its internet for 5 minutes, 30 minutes, 2 hours, or until you unblock it; resume now; open Properties or its folder. Paused programs show "Paused until ..." and are unblocked automatically when the time is up (even after a restart of Visually Safe).
 
 ## 1.0.16
 - Network menu wording: pausing only affects the chosen program, not the whole PC.
@@ -322,7 +324,7 @@ An AI agent is told what TinyGuard does (this README and the list of source file
 - Scan light: a green (clean) badge now fades away slowly, but only while the mouse is being moved (a still mouse keeps it lit). Yellow and red results stay lit until the icon scrolls away or its window closes.
 
 ## 1.0.20: scanning a whole selection
-- Circle or select as many icons as you like on the Desktop or in a folder and press **Ctrl+Alt+S** (or tray > "Scan selected icons now"): every selected file and folder is scanned and gets the scan light. The right-click "Scan with TinyGuard" entry still works, but Windows hides it when more than 15 items are selected and starts one program per item, so use Ctrl+Alt+S for big selections. The right-click path also waits its turn now instead of dropping items when many arrive at once.
+- Circle or select as many icons as you like on the Desktop or in a folder and press **Ctrl+Alt+S** (or tray > "Scan selected icons now"): every selected file and folder is scanned and gets the scan light. The right-click "Scan with Visually Safe" entry still works, but Windows hides it when more than 15 items are selected and starts one program per item, so use Ctrl+Alt+S for big selections. The right-click path also waits its turn now instead of dropping items when many arrive at once.
 
 ## 1.0.21
 - Ctrl+Alt+S now scans only the selection in the window you were in (the Desktop or that one Explorer window). Every scan request is logged in `scan-requests.log` in the data folder.
@@ -332,14 +334,14 @@ An AI agent is told what TinyGuard does (this README and the list of source file
 
 ## 1.0.23
 - The scan light is now a progress ring: a ring fills slowly round the icon (blue to green) with the percentage in a tag on its corner, so a big file shows real progress instead of circling forever. Folders fill as their files are checked.
-- Yellow = suspicious, red = quarantined. A quarantined file leaves a small stand-in under its old name so its icon stays red and double-clicking it can't run anything. Scan the stand-in with TinyGuard and it re-checks the real file, giving it back only if it is clean now (Restore and Delete in Quarantine also clear the stand-in).
+- Yellow = suspicious, red = quarantined. A quarantined file leaves a small stand-in under its old name so its icon stays red and double-clicking it can't run anything. Scan the stand-in with Visually Safe and it re-checks the real file, giving it back only if it is clean now (Restore and Delete in Quarantine also clear the stand-in).
 - Works on every Desktop file, folder and shortcut.
 
 ## 1.0.24
 - Network: the alt-click / right-click menu on a program now also has "Ask AI about this program (repair / is it safe)...", which lists the installed AI agents (Claude Code, Codex) and hands them that program's details.
 
 ## 1.0.25
-- AI agents can now contain a program: the instructions given to Claude Code / Codex include `TinyGuard.exe --net-block "path"`, `--net-unblock "path"` and `--stop-program "path"` (one program only, never TinyGuard itself; admin needed for the firewall ones). Every use is logged in `agent-actions.log`.
+- AI agents can now contain a program: the instructions given to Claude Code / Codex include `TinyGuard.exe --net-block "path"`, `--net-unblock "path"` and `--stop-program "path"` (one program only, never Visually Safe itself; admin needed for the firewall ones). Every use is logged in `agent-actions.log`.
 
 ## 1.0.26
 - Net tools: the status line above the results (for example after "Open ports on this PC") was cut off at the bottom by the list; it now shows fully.
@@ -355,16 +357,16 @@ An AI agent is told what TinyGuard does (this README and the list of source file
 - Net tools: Alt+click a port result (open ports on this PC, or a port scan) to ignore that port or that program, or stop ignoring it. Common Windows ports (135, 139, 445, 5040, DNS/DHCP, discovery, Windows' dynamic ports) and programs in the Windows folder are ignored by default so they stop showing as warnings; they are still listed, marked "ignored". Your rules are in `net-ignore.txt`, and the menu can turn the built-in list off.
 
 ## 1.0.30
-- Screen saver stays cool: it redraws at full speed for the first 3 minutes, slower until 15 minutes, then about once a second for the rest of the night, and TinyGuard runs at low priority while the saver is on (back to normal when you leave it).
+- Screen saver stays cool: it redraws at full speed for the first 3 minutes, slower until 15 minutes, then about once a second for the rest of the night, and Visually Safe runs at low priority while the saver is on (back to normal when you leave it).
 
 ## 1.0.31 — Shields
 New **Shields** page (last item in the sidebar).
-- **Ransomware shield**: watches Documents, Pictures, Desktop, Videos and Music. A hidden canary file (`!~tinyguard-canary.docx`) sits in each folder; if anything changes, renames or deletes it, or about 8 files turn into scrambled data (wrong file header plus noise-like contents) or get renamed to odd extensions within 20 seconds, TinyGuard finds the programs writing the most data that are not Windows or a trusted publisher, stops them, cuts their internet and quarantines them (switchable to warn-only). Build and cache folders (`bin`, `obj`, `.git`, `node_modules`, …) and your safe folders are ignored. "Test it safely" runs a made-up ransomware in a throw-away folder.
+- **Ransomware shield**: watches Documents, Pictures, Desktop, Videos and Music. A hidden canary file (`!~tinyguard-canary.docx`) sits in each folder; if anything changes, renames or deletes it, or about 8 files turn into scrambled data (wrong file header plus noise-like contents) or get renamed to odd extensions within 20 seconds, Visually Safe finds the programs writing the most data that are not Windows or a trusted publisher, stops them, cuts their internet and quarantines them (switchable to warn-only). Build and cache folders (`bin`, `obj`, `.git`, `node_modules`, …) and your safe folders are ignored. "Test it safely" runs a made-up ransomware in a throw-away folder.
 - **Web blocklist**: blocks known malware and phishing websites for every program by pointing them at 0.0.0.0 in the Windows hosts file (free lists from URLhaus and Phishing Army, refreshed daily, at most 40,000 sites; Microsoft, Google, GitHub and similar are never blocked). Needs administrator rights, keeps a backup (`hosts.original.bak`), only touches its own marked block, has custom Block / Allow and a "Check a domain" box. Off by default: switch it on in Shields. It can't stop a browser that uses its own encrypted DNS.
-- **Malware fingerprint feed**: with your free abuse.ch key (Settings) TinyGuard pulls the newest MalwareBazaar fingerprints every 12 hours into its block list. (abuse.ch's keyless downloads were switched off, so the key is required.)
-- **Self-protection**: warns if TinyGuard's program file (same version, different fingerprint) or its settings file are changed behind its back (and puts the protection setting back), restarts TinyGuard within 2 minutes if something kills it (scheduled task "TinyGuard Watchdog"; not after you use Exit), and optionally stops ordinary programs from ending or injecting into it.
-- `tools\release.ps1` builds and zips a release (and signs it if you pass a code-signing certificate thumbprint); `tools\install.ps1` installs it to Program Files with a Start menu shortcut and start-at-logon. Real trust from Windows needs a certificate from a trusted authority, which TinyGuard can't make for itself.
+- **Malware fingerprint feed**: with your free abuse.ch key (Settings) Visually Safe pulls the newest MalwareBazaar fingerprints every 12 hours into its block list. (abuse.ch's keyless downloads were switched off, so the key is required.)
+- **Self-protection**: warns if Visually Safe's program file (same version, different fingerprint) or its settings file are changed behind its back (and puts the protection setting back), restarts Visually Safe within 2 minutes if something kills it (scheduled task "Visually Safe Watchdog"; not after you use Exit), and optionally stops ordinary programs from ending or injecting into it.
+- `tools\release.ps1` builds and zips a release (and signs it if you pass a code-signing certificate thumbprint); `tools\install.ps1` installs it to Program Files with a Start menu shortcut and start-at-logon. Real trust from Windows needs a certificate from a trusted authority, which Visually Safe can't make for itself.
 - Developer check: `TinyGuard.exe --shield-test result.txt` runs the ransomware simulation and the list and feed parsers.
 
 ## 1.0.32
-- Rest the mouse on a Desktop or Explorer icon that TinyGuard already scanned and its result badge (green tick, yellow warning or red cross in a coloured box) shows again, for as long as you choose after the scan: 12 hours, 24 hours, 48 hours (default), 7 days, never, or off. Set it on the Settings page, next to the quarantine option.
+- Rest the mouse on a Desktop or Explorer icon that Visually Safe already scanned and its result badge (green tick, yellow warning or red cross in a coloured box) shows again, for as long as you choose after the scan: 12 hours, 24 hours, 48 hours (default), 7 days, never, or off. Set it on the Settings page, next to the quarantine option.

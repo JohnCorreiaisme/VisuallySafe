@@ -61,14 +61,14 @@ namespace TinyGuard
     }
 
     /// <summary>
-    /// AI helper page: hand everything TinyGuard found to Claude Code or Codex, or paste an answer from any other AI and approve its proposed fixes.
+    /// AI helper page: hand everything Visually Safe found to Claude Code or Codex, or paste an answer from any other AI and approve its proposed fixes.
     /// </summary>
     class AssistantView : Panel
     {
         readonly Engine eng;
         readonly AgentCard cClaude = new AgentCard { Name = "Claude Code" }, cCodex = new AgentCard { Name = "Codex" };
         readonly Btn bClaude = new Btn("Fix with Claude Code", true), bCodex = new Btn("Fix with Codex", true);
-        readonly Btn bCopy = new Btn("Copy prompt for any AI"), bPaste = new Btn("Paste the AI's reply"), bUpdate = new Btn("Update TinyGuard with AI");
+        readonly Btn bCopy = new Btn("Copy prompt for any AI"), bPaste = new Btn("Paste the AI's reply"), bUpdate = new Btn("Update Visually Safe with AI");
         readonly Btn bApply = new Btn("Apply approved", true), bClear = new Btn("Clear ticks");
         readonly Label status, listTitle, hint;
         readonly TextBox reply = new TextBox { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BackColor = Theme.Card, ForeColor = Theme.Text, BorderStyle = BorderStyle.None };
@@ -88,7 +88,7 @@ namespace TinyGuard
             eng = engine;
             BackColor = Theme.Bg;
             Controls.Add(new Label { Text = "AI helper", Font = new Font("Segoe UI Semibold", 16f), ForeColor = Theme.Text, AutoSize = true, Location = new Point(24, 18) });
-            Controls.Add(new Label { Text = "Hand what TinyGuard found to Claude Code or Codex. You choose how it runs and approve it first.", ForeColor = Theme.Muted, AutoSize = true, Location = new Point(28, 54) });
+            Controls.Add(new Label { Text = "Hand what Visually Safe found to Claude Code or Codex. You choose how it runs and approve it first.", ForeColor = Theme.Muted, AutoSize = true, Location = new Point(28, 54) });
 
             cClaude.Bounds = new Rectangle(28, 86, 614, 52);
             cCodex.Bounds = new Rectangle(28, 146, 614, 52);
@@ -130,7 +130,7 @@ namespace TinyGuard
             bCopy.BringToFront(); bPaste.BringToFront();    // nothing may sit on top of these two
             // the big wizard button covers the fix-it tools until you ask for them
             landing = new WizardLanding { Bounds = new Rectangle(28, 84, 614, 360) };
-            cWizStart = new CheckBox { Text = "Show the wizard when TinyGuard starts", Bounds = new Rectangle(28, 452, 614, 28), ForeColor = Theme.Text, BackColor = Theme.Bg, Font = new Font("Segoe UI", 11f), Cursor = Cursors.Hand };
+            cWizStart = new CheckBox { Text = "Show the wizard when Visually Safe starts", Bounds = new Rectangle(28, 452, 614, 28), ForeColor = Theme.Text, BackColor = Theme.Bg, Font = new Font("Segoe UI", 11f), Cursor = Cursors.Hand };
             cWizStart.CheckedChanged += (s, e) =>
             {
                 if (syncingWizBox || Helper.Cfg == null) return;
@@ -177,7 +177,7 @@ namespace TinyGuard
             {
                 var card = a.Id == "claude" ? cClaude : cCodex; var btn = a.Id == "claude" ? bClaude : bCodex;
                 card.Known = true; card.Found = a.Found;
-                card.Status = a.Found ? "Installed" + (a.Version.Length > 0 ? " · " + a.Version : "") : "Not installed. TinyGuard can install it for you.";
+                card.Status = a.Found ? "Installed" + (a.Version.Length > 0 ? " · " + a.Version : "") : "Not installed. Visually Safe can install it for you.";
                 btn.Text = a.Found ? "Fix with " + a.Name : "Install " + a.Name;
                 btn.Primary = true; btn.Invalidate(); card.Invalidate();
             }
@@ -189,7 +189,7 @@ namespace TinyGuard
         {
             var a = Agents.Detect().FirstOrDefault(x => x.Id == id);
             if (a == null) return;
-            AgentMenu.Launch(FindForm(), (id == "claude" ? bClaude : bCodex), eng, a, "everything TinyGuard found", () => AgentPrompt.ForReport(eng));
+            AgentMenu.Launch(FindForm(), (id == "claude" ? bClaude : bCodex), eng, a, "everything Visually Safe found", () => AgentPrompt.ForReport(eng));
             Detect();
         }
 

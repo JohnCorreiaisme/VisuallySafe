@@ -27,7 +27,7 @@ namespace TinyGuard
 
     class Job { public string Path = ""; public bool Manual, Scan, FolderDone; public int Pid; }
 
-    /// <summary>What TinyGuard last concluded about one file (every file it has examined, not just the flagged ones).</summary>
+    /// <summary>What Visually Safe last concluded about one file (every file it has examined, not just the flagged ones).</summary>
     class LedgerEntry { public Verdict Verdict; public DateTime Time; public bool Quarantined, Deleted, Deep; public string Detail = ""; }
 
     class QuarantineItem
@@ -183,7 +183,7 @@ namespace TinyGuard
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.83";
+        public const string Version = "1.0.84";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -263,7 +263,7 @@ namespace TinyGuard
             if (S.FirstRun) S.Save();
             LoadState();
             RebuildWatchers();
-            worker = new Thread(Work) { IsBackground = true, Name = "TinyGuard scanner", Priority = ThreadPriority.BelowNormal };
+            worker = new Thread(Work) { IsBackground = true, Name = "Visually Safe scanner", Priority = ThreadPriority.BelowNormal };
             worker.Start();
             procs = new ProcWatch(ProcessStarted);
             if (Environment.GetEnvironmentVariable("TINYGUARD_NOSHIELDS") != "1") Shield.Start();
@@ -375,7 +375,7 @@ namespace TinyGuard
 
         // ---------- scanning ----------
 
-        // Manual scans (a selection of icons, "Scan with TinyGuard") run several at a time, and every item lights up at once while it waits.
+        // Manual scans (a selection of icons, "Scan with Visually Safe") run several at a time, and every item lights up at once while it waits.
 
         public void ScanNow(string path)
         {
@@ -497,7 +497,7 @@ namespace TinyGuard
                         Interlocked.Decrement(ref manualPending);
                         job.Item3.TrySetResult(true);
                     }
-                }) { IsBackground = true, Name = "TinyGuard manual scan" };
+                }) { IsBackground = true, Name = "Visually Safe manual scan" };
                 t.Start();
             }
         }
@@ -610,7 +610,7 @@ namespace TinyGuard
                 && detail.IndexOf("Listed as malware", StringComparison.OrdinalIgnoreCase) < 0;
         }
 
-        /// <summary>Ask Windows' protection about the warnings already listed: where it finds nothing, TinyGuard's own guess is dropped.</summary>
+        /// <summary>Ask Windows' protection about the warnings already listed: where it finds nothing, Visually Safe's own guess is dropped.</summary>
         public void RecheckWarnings()
         {
             if (!S.UseDefender || !DefenderLink.Available) return;
@@ -627,7 +627,7 @@ namespace TinyGuard
                 DefenderLink.Answer a = null;
                 try { a = DefenderLink.Check(kv.Key); } catch { }
                 if (a == null || a.Threat) continue;
-                string detail = "Microsoft Defender: no threat found (TinyGuard's guess was: " + kv.Value + ")";
+                string detail = "Microsoft Defender: no threat found (Visually Safe's guess was: " + kv.Value + ")";
                 lock (gate)
                     foreach (var h in history.Where(h => string.Equals(h.FilePath, kv.Key, StringComparison.OrdinalIgnoreCase) && !h.Quarantined && h.Verdict == Verdict.Suspicious)) { h.Verdict = Verdict.Unknown; h.Detail = detail; }
                 Ledger(kv.Key, Verdict.Unknown, false, false, detail);
@@ -807,7 +807,7 @@ namespace TinyGuard
             }
         }
 
-        // ---- "Ignore": things you told TinyGuard to leave alone (a file, a whole folder, or a file type)
+        // ---- "Ignore": things you told Visually Safe to leave alone (a file, a whole folder, or a file type)
         string IgnoreFile { get { return Path.Combine(DataDir, "ignore.txt"); } }
         List<string[]> ignores;
         List<string[]> Ignores()
@@ -860,9 +860,9 @@ namespace TinyGuard
         {
             if (IsIgnored(path)) return true;
             if (path.StartsWith(DataDir, StringComparison.OrdinalIgnoreCase)) return true;
-            // TinyGuard's own folder: itself and the YARA engine it starts for every scan.
+            // Visually Safe's own folder: itself and the YARA engine it starts for every scan.
             if (path.StartsWith(AppDomain.CurrentDomain.BaseDirectory, StringComparison.OrdinalIgnoreCase)) return true;
-            // while developing: TinyGuard's own build folders next to the project file (bin, bin_new)
+            // while developing: Visually Safe's own build folders next to the project file (bin, bin_new)
             try
             {
                 string parent = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory.TrimEnd((char)92));
@@ -1200,14 +1200,14 @@ namespace TinyGuard
             if (!S.UseDefender || rec.Verdict >= Verdict.Malicious) return;
             if (rec.Verdict != Verdict.Unknown && rec.Verdict != Verdict.Suspicious) return;     // signed or already-known-good files need no second opinion
             if (rec.Verdict == Verdict.Unknown && !S.Cloud) return;
-            try { if (rec.FilePath.StartsWith(AppDomain.CurrentDomain.BaseDirectory, StringComparison.OrdinalIgnoreCase)) return; } catch { }     // never judge ourselves: Defender has mislabelled TinyGuard before
+            try { if (rec.FilePath.StartsWith(AppDomain.CurrentDomain.BaseDirectory, StringComparison.OrdinalIgnoreCase)) return; } catch { }     // never judge ourselves: Defender has mislabelled Visually Safe before
             var a = DefenderLink.Check(rec.FilePath);
             if (a == null) return;
             if (!a.Threat)
             {
-                // TinyGuard's own guess (AI or how the file looks) is overruled when Windows' protection finds nothing. A YARA rule match stays a warning.
+                // Visually Safe's own guess (AI or how the file looks) is overruled when Windows' protection finds nothing. A YARA rule match stays a warning.
                 if (rec.Verdict == Verdict.Suspicious && !rec.Detail.StartsWith("YARA rule", StringComparison.OrdinalIgnoreCase))
-                { rec.Detail = "Microsoft Defender: no threat found (TinyGuard's guess was: " + rec.Detail + ")"; rec.Verdict = Verdict.Unknown; }
+                { rec.Detail = "Microsoft Defender: no threat found (Visually Safe's guess was: " + rec.Detail + ")"; rec.Verdict = Verdict.Unknown; }
                 else rec.Detail += " · Microsoft Defender: no threat found";
                 return;
             }
@@ -1523,7 +1523,7 @@ namespace TinyGuard
         }
 
         // ---- a quarantined file leaves a small stand-in under its old name, so its icon stays (red) and double-clicking it
-        //      can't run anything. Scanning the stand-in with TinyGuard re-checks the real file and gives it back only if it is clean now.
+        //      can't run anything. Scanning the stand-in with Visually Safe re-checks the real file and gives it back only if it is clean now.
         const string PlaceholderMark = "TINYGUARD-QUARANTINED:";
 
         static void WritePlaceholder(string path, string id)
@@ -1532,7 +1532,7 @@ namespace TinyGuard
             {
                 string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).TrimEnd((char)92) + (char)92;
                 if (!path.StartsWith(home, StringComparison.OrdinalIgnoreCase) || File.Exists(path) || Directory.Exists(path)) return;
-                File.WriteAllText(path, PlaceholderMark + id + "\r\nTinyGuard removed this file because it looked dangerous, and keeps the real file locked away.\r\nTo look at it again: right-click this icon and choose \"Scan with TinyGuard\" (or open TinyGuard > Quarantine).\r\n");
+                File.WriteAllText(path, PlaceholderMark + id + "\r\nTinyGuard removed this file because it looked dangerous, and keeps the real file locked away.\r\nTo look at it again: right-click this icon and choose \"Scan with Visually Safe\" (or open Visually Safe > Quarantine).\r\n");
             }
             catch { }
         }
@@ -1710,7 +1710,7 @@ namespace TinyGuard
             return failed;
         }
 
-        /// <summary>Quarantined files on disk that TinyGuard has lost track of (from older versions that hid delete failures).</summary>
+        /// <summary>Quarantined files on disk that Visually Safe has lost track of (from older versions that hid delete failures).</summary>
         public int LeftoverCount()
         {
             try

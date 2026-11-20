@@ -236,7 +236,7 @@ namespace TinyGuard
         public void Start()
         {
             if (worker != null) return;
-            worker = new Thread(Run) { IsBackground = true, Name = "TinyGuard deep scan", Priority = ThreadPriority.Lowest };
+            worker = new Thread(Run) { IsBackground = true, Name = "Visually Safe deep scan", Priority = ThreadPriority.Lowest };
             worker.Start();
         }
 

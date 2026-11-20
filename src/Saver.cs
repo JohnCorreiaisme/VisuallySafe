@@ -79,7 +79,7 @@ namespace TinyGuard
         long lastRx, lastTx; DateTime lastAt = DateTime.MinValue;
 
         public NetSampler(Engine e) { eng = e; }
-        public void Start() { th = new Thread(Loop) { IsBackground = true, Priority = ThreadPriority.BelowNormal, Name = "TinyGuard network picture" }; th.Start(); }
+        public void Start() { th = new Thread(Loop) { IsBackground = true, Priority = ThreadPriority.BelowNormal, Name = "Visually Safe network picture" }; th.Start(); }
         public void Stop() { stop = true; }
 
         void Loop() { while (!stop) { try { Sample(); } catch { } for (int i = 0; i < 10 && !stop; i++) Thread.Sleep(100); } }
@@ -304,7 +304,7 @@ namespace TinyGuard
 
     // ---------------------------------------------------------------------------------------------------------
 
-    /// <summary>Registers TinyGuard as the Windows screen saver (a .scr copy of itself) and restores whatever was set before.</summary>
+    /// <summary>Registers Visually Safe as the Windows screen saver (a .scr copy of itself) and restores whatever was set before.</summary>
     static class SystemSaver
     {
         [DllImport("user32.dll", SetLastError = true)] static extern bool SystemParametersInfo(uint action, uint param, IntPtr v, uint flags);
@@ -505,7 +505,7 @@ namespace TinyGuard
         {
             var d = eng.Deep;
             float fs = Math.Max(12, H * 0.019f);
-            string head = "TinyGuard · " + (d.Phase.StartsWith("Every") ? "Deep scan complete" : "Deep scan");
+            string head = "Visually Safe · " + (d.Phase.StartsWith("Every") ? "Deep scan complete" : "Deep scan");
             Theme.Str(g, head, Theme.F(fs * 1.5f, true), Color.FromArgb(220, 235, 255), new RectangleF(W * 0.03f, H * 0.03f, W * 0.5f, fs * 2.4f));
             string line1 = d.Total > 0 ? d.Done.ToString("N0") + " of " + d.Total.ToString("N0") + " files examined · " + d.Flagged + " flagged" : d.Phase;
             string eta = "";
@@ -535,7 +535,7 @@ namespace TinyGuard
             {
                 // reading the drive needs administrator rights: show a made-up drive so the display still works
                 DefragService.Snapshot = DefragDemo.Make(); DefragService.Prev = null; DefragService.IsDemo = true;
-                DefragService.Notice = "Demo picture: run TinyGuard as administrator to see your real drive";
+                DefragService.Notice = "Demo picture: run Visually Safe as administrator to see your real drive";
                 return;
             }
             DefragService.IsDemo = false; DefragService.Notice = "";
@@ -554,7 +554,7 @@ namespace TinyGuard
         }
 
         // Keeps the fans quiet: the longer the saver runs, the slower it redraws (full speed at first, a slow breath after the first minutes,
-        // about one picture a second once it is running all night), and TinyGuard runs at low priority while it is on.
+        // about one picture a second once it is running all night), and Visually Safe runs at low priority while it is on.
         static int rateLevel = -1;
         static System.Diagnostics.ProcessPriorityClass oldPriority = System.Diagnostics.ProcessPriorityClass.Normal; static bool priorityChanged;
 
@@ -636,7 +636,7 @@ namespace TinyGuard
         }
     }
 
-    /// <summary>Lets TinyGuard.scr (started by Windows) ask the running TinyGuard to show the screen saver.</summary>
+    /// <summary>Lets TinyGuard.scr (started by Windows) ask the running Visually Safe to show the screen saver.</summary>
     static class SaverPipe
     {
         static string NameFor(string dataDir) { return "TinyGuardPipe-" + (Environment.UserName + "|" + dataDir.ToLowerInvariant()).GetHashCode().ToString("x"); }
@@ -672,11 +672,11 @@ namespace TinyGuard
                                 }
                             }
                             catch { }
-                        }) { IsBackground = true, Name = "TinyGuard pipe command" }.Start();
+                        }) { IsBackground = true, Name = "Visually Safe pipe command" }.Start();
                     }
                     catch { Thread.Sleep(1000); }
                 }
-            }) { IsBackground = true, Name = "TinyGuard pipe" };
+            }) { IsBackground = true, Name = "Visually Safe pipe" };
             th.Start();
         }
 

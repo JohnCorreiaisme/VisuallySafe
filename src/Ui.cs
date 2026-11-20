@@ -171,7 +171,7 @@ namespace TinyGuard
     }
 
     /// <summary>
-    /// "Start with Windows". Normally a per-user Run key. Once TinyGuard runs as administrator (for the network
+    /// "Start with Windows". Normally a per-user Run key. Once Visually Safe runs as administrator (for the network
     /// monitor) it uses a logon scheduled task with highest rights instead, so it starts elevated without a prompt.
     /// </summary>
     static class Startup
@@ -224,12 +224,12 @@ namespace TinyGuard
 
         static bool CreateTask()
         {
-            // XML so the task never times out (schtasks' default would stop TinyGuard after 3 days) and runs on battery.
+            // XML so the task never times out (schtasks' default would stop Visually Safe after 3 days) and runs on battery.
             string user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
             string xml =
 "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\r\n" +
 "<Task version=\"1.2\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">\r\n" +
-"  <RegistrationInfo><Description>Starts TinyGuard with administrator rights for its network monitor.</Description></RegistrationInfo>\r\n" +
+"  <RegistrationInfo><Description>Starts Visually Safe with administrator rights for its network monitor.</Description></RegistrationInfo>\r\n" +
 "  <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>" + SecurityElement.Escape(user) + "</UserId></LogonTrigger></Triggers>\r\n" +
 "  <Principals><Principal id=\"Author\"><UserId>" + SecurityElement.Escape(user) + "</UserId><LogonType>InteractiveToken</LogonType><RunLevel>HighestAvailable</RunLevel></Principal></Principals>\r\n" +
 "  <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>" +
@@ -428,7 +428,7 @@ namespace TinyGuard
             g.Clear(BackColor);
             Theme.Prep(g);
             Theme.DrawShield(g, new RectangleF(22, 26, 26, 30), State);
-            Theme.Str(g, "TinyGuard", Theme.F(19, true), Theme.Text, new RectangleF(58, 24, 130, 34));
+            Theme.Str(g, "Visually Safe", Theme.F(15, true), Theme.Text, new RectangleF(54, 28, 170, 30));
             for (int i = 0; i < Names.Length; i++)
             {
                 var r = new RectangleF(12, 92 + i * 34, W - 24, 31);
@@ -652,7 +652,7 @@ namespace TinyGuard
                 case Verdict.Malicious:
                     return "Known malware. Click Quarantine now to lock it away so it can't run, then delete it from the Quarantine page. If you opened it, also run a full scan with Windows Security.";
                 case Verdict.Suspicious:
-                    return "TinyGuard isn't certain. If you don't recognise it or didn't expect it, click Quarantine (you can restore it later). If you made it or trust where it came from, click Mark as safe. \"Look up online\" shows what other antivirus engines say.";
+                    return "Visually Safe isn't certain. If you don't recognise it or didn't expect it, click Quarantine (you can restore it later). If you made it or trust where it came from, click Mark as safe. \"Look up online\" shows what other antivirus engines say.";
                 case Verdict.Unknown:
                     return "Nobody recognises this file yet, which is normal for new or home-made programs. If you made it or trust the source, click Mark as safe. If you're unsure, click Quarantine.";
                 default:
@@ -746,7 +746,7 @@ namespace TinyGuard
             SuspendLayout();
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            Text = "TinyGuard";
+            Text = "Visually Safe";
             ClientSize = new Size(860, 560);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
@@ -772,7 +772,7 @@ namespace TinyGuard
             pages[0] = status;
 
             // ----- Activity -----
-            var pa = Page("Activity", "Every program and script TinyGuard has checked. Alt+click one for properties, links and an AI fix.");
+            var pa = Page("Activity", "Every program and script Visually Safe has checked. Alt+click one for properties, links and an AI fix.");
             activity.Bounds = new Rectangle(28, 84, 614, 242);
             activity.Painter = PaintRecord;
             activity.SelectedIndexChanged += (s, e) => UpdateButtons();
@@ -846,7 +846,7 @@ namespace TinyGuard
                 int i = quar.IndexFromPoint(e.Location);
                 if (i >= 0) { quar.SelectedIndex = i; ActPropertiesQuarantined(); }
             };
-            quarEmpty = Empty("No warnings and nothing in quarantine. Files TinyGuard flags or locks away will appear here.", new Rectangle(28, 84, 614, 396));
+            quarEmpty = Empty("No warnings and nothing in quarantine. Files Visually Safe flags or locks away will appear here.", new Rectangle(28, 84, 614, 396));
             qdetail.Bounds = new Rectangle(28, 334, 614, 154);
             bRestore.Bounds = new Rectangle(28, 498, 112, 36);
             bDelete.Bounds = new Rectangle(148, 498, 150, 36);
@@ -862,7 +862,7 @@ namespace TinyGuard
 
             // ----- Settings -----
             var ps = Page("Settings", null);
-            cStartup = Check("Start TinyGuard when Windows starts", 62);
+            cStartup = Check("Start Visually Safe when Windows starts", 62);
             cStartup.Width = 330;
             cDefender = Check("Ask Microsoft Defender too", 62);
             cDefender.Bounds = new Rectangle(366, 62, 276, 24);
@@ -886,7 +886,7 @@ namespace TinyGuard
             cSaverIdle = Check("Screen saver mode: deep-scan slowly when I'm away", 170);
             cSaverIdle.Width = 400;
             bSaverMinutes = new Btn("after " + eng.S.ScreensaverMinutes + " min  ▾") { Bounds = new Rectangle(436, 166, 130, 30) };
-            cSaverSys = Check("Use TinyGuard as the Windows screen saver", 198);
+            cSaverSys = Check("Use Visually Safe as the Windows screen saver", 198);
             cSaverSys.Width = 400;
             bSaverMode = new Btn(eng.S.SaverMode == "defrag" ? "shows: defrag only  ▾" : "shows: scan, then defrag  ▾") { Bounds = new Rectangle(436, 194, 206, 30) };
             cSaverDefrag = Check("Defragment the hard drive after the deep scan finishes", 224);
@@ -927,7 +927,7 @@ namespace TinyGuard
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "Couldn't change Windows' screen saver setting: " + ex.Message, "TinyGuard");
+                    MessageBox.Show(this, "Couldn't change Windows' screen saver setting: " + ex.Message, "Visually Safe");
                     loading = true; cSaverSys.Checked = SystemSaver.IsRegistered(); loading = false;
                 }
             };
@@ -976,7 +976,7 @@ namespace TinyGuard
             var bRules = new Btn("Update rules") { Bounds = new Rectangle(522, 508, 120, 30) };
             bRules.Click += (s, e) => { eng.CheckRulesNow(); RefreshAll(true); };
             var l5 = lRules;
-            var l4 = Small("TinyGuard's files: " + eng.DataDir, 540);
+            var l4 = Small("Visually Safe's files: " + eng.DataDir, 540);
             l4.ForeColor = Theme.Grey;
             ps.Controls.AddRange(new Control[] { cStartup, cDefender, cCloud, cGlow, cAuto, bBadge, lSv, cSaverIdle, bSaverMinutes, cSaverSys, bSaverMode, cSaverDefrag, bSaverNow, bDefragNow, lSaver, l5, bRules, l1, lFolders, a1, r1, l2, lSafe, a2, r2, l3, tKey, sk, l4 });
             pages[9] = ps;
@@ -1071,7 +1071,7 @@ namespace TinyGuard
             if (!eng.Quarantine(r))
                 MessageBox.Show(this, "Couldn't quarantine \"" + r.Name + "\". " + (File.Exists(r.FilePath)
                     ? "It may be in use right now: close the program that is using it and try again."
-                    : "The file is already gone."), "TinyGuard", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    : "The file is already gone."), "Visually Safe", MessageBoxButtons.OK, MessageBoxIcon.Information);
             RefreshAll(true);
         }
 
@@ -1081,7 +1081,7 @@ namespace TinyGuard
             if (MessageBox.Show(this, "Delete \"" + r.Name + "\" permanently?\n\n" + r.FilePath + "\n\nIt will NOT go to the Recycle Bin and can't be undone.\n(Quarantine is the safer choice if you might want it back.)",
                     "Delete file", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             string err = eng.DeleteFile(r);
-            if (err != null) MessageBox.Show(this, "Couldn't delete it: " + err, "TinyGuard");
+            if (err != null) MessageBox.Show(this, "Couldn't delete it: " + err, "Visually Safe");
             RefreshAll(true);
         }
 
@@ -1133,7 +1133,7 @@ namespace TinyGuard
             if (MessageBox.Show(this, "Quarantine all " + n + " file" + (n == 1 ? "" : "s") + " that need action?\n\nThey are locked away where they can't run. You can restore any of them from the Quarantine page.",
                     "Quarantine all", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
             int failed = eng.QuarantineAllThreats();
-            if (failed > 0) MessageBox.Show(this, failed + " file" + (failed == 1 ? "" : "s") + " couldn't be quarantined (probably in use right now). Close the program using it and try again.", "TinyGuard");
+            if (failed > 0) MessageBox.Show(this, failed + " file" + (failed == 1 ? "" : "s") + " couldn't be quarantined (probably in use right now). Close the program using it and try again.", "Visually Safe");
             RefreshAll(true);
         }
 
@@ -1166,7 +1166,7 @@ namespace TinyGuard
             if (MessageBox.Show(this, "Put \"" + q.Name + "\" back where it was?\n\nTinyGuard will treat this file as safe from now on. Only do this if you're sure it was a false alarm.",
                     "Restore file", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             string err = eng.Restore(q);
-            if (err != null) MessageBox.Show(this, "Couldn't restore it: " + err, "TinyGuard");
+            if (err != null) MessageBox.Show(this, "Couldn't restore it: " + err, "Visually Safe");
             RefreshAll(true);
         }
 
@@ -1190,7 +1190,7 @@ namespace TinyGuard
                 if (err != null) errors.Add("\"" + items[0].Name + "\": " + err);
             }
             if (errors.Count > 0)
-                MessageBox.Show(this, "Not everything was deleted:\n\n" + string.Join("\n", errors) + "\n\nSomething may still have the file open. Close other programs and try again.", "TinyGuard", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, "Not everything was deleted:\n\n" + string.Join("\n", errors) + "\n\nSomething may still have the file open. Close other programs and try again.", "Visually Safe", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             RefreshAll(true);
         }
 
@@ -1342,7 +1342,7 @@ namespace TinyGuard
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            // Closing the window only hides it; TinyGuard keeps running by the clock.
+            // Closing the window only hides it; Visually Safe keeps running by the clock.
             if (!ReallyClose && e.CloseReason == CloseReason.UserClosing) { e.Cancel = true; Hide(); }
             base.OnFormClosing(e);
         }

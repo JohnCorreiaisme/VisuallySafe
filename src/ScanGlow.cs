@@ -15,7 +15,7 @@ using Microsoft.Win32;
 namespace TinyGuard
 {
     /// <summary>
-    /// A light that runs around the edge of a file's icon (in Explorer or on the Desktop) while TinyGuard checks it,
+    /// A light that runs around the edge of a file's icon (in Explorer or on the Desktop) while Visually Safe checks it,
     /// then flashes green (clean), blue (neutral) or red (found something). It is a see-through window that mouse clicks pass through.
     /// </summary>
     class FoundItem { public Rectangle R; public IntPtr Top; }
@@ -136,7 +136,7 @@ namespace TinyGuard
         }
 
         /// <summary>
-        /// The files and folders currently selected on the Desktop and in open Explorer windows (circle a lot of icons, then ask TinyGuard).
+        /// The files and folders currently selected on the Desktop and in open Explorer windows (circle a lot of icons, then ask Visually Safe).
         /// The right-click menu entry can't do this: Windows hides a menu entry like ours when more than 15 items are selected.
         /// </summary>
         public static List<string> SelectedPaths(IntPtr front = default(IntPtr))
@@ -286,7 +286,7 @@ namespace TinyGuard
 
 
     /// <summary>
-    /// Rest the mouse on an icon (Desktop or an Explorer window) that TinyGuard has already scanned and its result badge shows again,
+    /// Rest the mouse on an icon (Desktop or an Explorer window) that Visually Safe has already scanned and its result badge shows again,
     /// for as long as you set in Settings (48 hours by default) after the scan.
     /// </summary>
     static class HoverBadge
@@ -435,7 +435,7 @@ namespace TinyGuard
             if (System.Threading.Interlocked.CompareExchange(ref started, 1, 0) != 0) return;
             for (int i = 0; i < 2; i++)
             {
-                var t = new System.Threading.Thread(() => { foreach (var a in q.GetConsumingEnumerable()) { try { a(); } catch { } } }) { IsBackground = true, Name = "TinyGuard icon look-up" };
+                var t = new System.Threading.Thread(() => { foreach (var a in q.GetConsumingEnumerable()) { try { a(); } catch { } } }) { IsBackground = true, Name = "Visually Safe icon look-up" };
                 t.SetApartmentState(System.Threading.ApartmentState.STA);
                 t.Start();
             }
@@ -700,7 +700,7 @@ namespace TinyGuard
         }
     }
 
-    /// <summary>"Scan with TinyGuard" in the right-click menu of files and folders (current user only).</summary>
+    /// <summary>"Scan with Visually Safe" in the right-click menu of files and folders (current user only).</summary>
     static class ShellMenu
     {
         [DllImport("shell32.dll")] static extern void SHChangeNotify(int eventId, uint flags, IntPtr item1, IntPtr item2);
@@ -721,7 +721,7 @@ namespace TinyGuard
                         using (var chk = Registry.CurrentUser.OpenSubKey(r)) if (chk == null) added = true;
                         using (var k = Registry.CurrentUser.CreateSubKey(r))
                         {
-                            k.SetValue("", "Scan with TinyGuard");
+                            k.SetValue("", "Scan with Visually Safe");
                             k.SetValue("Icon", "\"" + Application.ExecutablePath + "\",0");
                             using (var c = k.CreateSubKey("command")) c.SetValue("", "\"" + Application.ExecutablePath + "\" --scan-file \"%1\"");
                         }

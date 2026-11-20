@@ -86,7 +86,7 @@ namespace TinyGuard
 
         static void Search(PropInfo p, string text, string query) { p.Link("Web search — " + text, "https://duckduckgo.com/?q=" + Enc(query)); }
 
-        /// <summary>Links that explain the reason TinyGuard flagged something.</summary>
+        /// <summary>Links that explain the reason Visually Safe flagged something.</summary>
         static void ReasonLinks(PropInfo p, string text, string lolLink)
         {
             string t = text ?? "";
@@ -215,7 +215,7 @@ namespace TinyGuard
     // ---------------------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Properties window: where the item is, links explaining why it may be bad, TinyGuard's own fix options
+    /// Properties window: where the item is, links explaining why it may be bad, Visually Safe's own fix options
     /// (Fix… asks which one to use), and a button to hand the problem to Claude Code or Codex.
     /// </summary>
     class PropertiesForm : Form
@@ -332,7 +332,7 @@ namespace TinyGuard
             fixList.Location = new Point(x, y);
         }
 
-        // ------------------------------------------------------------------ TinyGuard's own fix options (no AI needed)
+        // ------------------------------------------------------------------ Visually Safe's own fix options (no AI needed)
 
         void StartOptions()
         {
@@ -388,7 +388,7 @@ namespace TinyGuard
                 list.Add(new ProposedAction
                 {
                     Type = "ignore", Reason = "You decide this one is fine.", Rec = info.Rec, F = info.Rec == null ? info.F : null, Recommended = !bad,
-                    Risk = info.Rec != null ? "TinyGuard will trust this file" : "Hidden from future rootkit checks"
+                    Risk = info.Rec != null ? "Visually Safe will trust this file" : "Hidden from future rootkit checks"
                 });
             add("delete", "Removes the file for good.", false);
             return list;
@@ -408,7 +408,7 @@ namespace TinyGuard
             else
             {
                 fixStatus.ForeColor = Theme.Amber;
-                fixStatus.Text = "TinyGuard has no automatic fix for this one.";
+                fixStatus.Text = "Visually Safe has no automatic fix for this one.";
                 fixList.Text = "Use \"Fix with agent\" to hand it to Claude Code or Codex, which can investigate and fix it on this PC.";
             }
             bFix.Enabled = todo.Count > 0;
