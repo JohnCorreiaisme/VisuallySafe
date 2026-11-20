@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     class DarkColors : ProfessionalColorTable
     {

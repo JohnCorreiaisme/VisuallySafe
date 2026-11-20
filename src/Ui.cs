@@ -12,7 +12,7 @@ using Microsoft.Win32;
 using System.Security;
 using System.Text;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     enum GuardState { Protected, Paused, Off, Alert }
 
@@ -177,12 +177,12 @@ namespace TinyGuard
     static class Startup
     {
         const string Key = @"Software\Microsoft\Windows\CurrentVersion\Run";
-        const string TaskName = "TinyGuard";
+        const string TaskName = "VisuallySafe";
         static bool? taskCache;
 
         static bool RunKey()
         {
-            try { using (var k = Registry.CurrentUser.OpenSubKey(Key)) return k != null && k.GetValue("TinyGuard") != null; }
+            try { using (var k = Registry.CurrentUser.OpenSubKey(Key)) return k != null && k.GetValue("VisuallySafe") != null; }
             catch { return false; }
         }
 
@@ -192,8 +192,8 @@ namespace TinyGuard
             {
                 using (var k = Registry.CurrentUser.OpenSubKey(Key, true))
                 {
-                    if (on) k.SetValue("TinyGuard", "\"" + Application.ExecutablePath + "\"");
-                    else k.DeleteValue("TinyGuard", false);
+                    if (on) k.SetValue("VisuallySafe", "\"" + Application.ExecutablePath + "\"");
+                    else k.DeleteValue("VisuallySafe", false);
                 }
             }
             catch { }
@@ -1163,7 +1163,7 @@ namespace TinyGuard
                 RefreshAll(true); return;
             }
             if (!(quar.SelectedItem is QuarantineItem q)) return;
-            if (MessageBox.Show(this, "Put \"" + q.Name + "\" back where it was?\n\nTinyGuard will treat this file as safe from now on. Only do this if you're sure it was a false alarm.",
+            if (MessageBox.Show(this, "Put \"" + q.Name + "\" back where it was?\n\nVisually Safe will treat this file as safe from now on. Only do this if you're sure it was a false alarm.",
                     "Restore file", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             string err = eng.Restore(q);
             if (err != null) MessageBox.Show(this, "Couldn't restore it: " + err, "Visually Safe");

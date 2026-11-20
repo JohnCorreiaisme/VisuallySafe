@@ -12,7 +12,7 @@ using System.Windows.Automation;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>
     /// A light that runs around the edge of a file's icon (in Explorer or on the Desktop) while Visually Safe checks it,
@@ -704,7 +704,7 @@ namespace TinyGuard
     static class ShellMenu
     {
         [DllImport("shell32.dll")] static extern void SHChangeNotify(int eventId, uint flags, IntPtr item1, IntPtr item2);
-        static readonly string[] Roots = { @"Software\Classes\*\shell\TinyGuardScan", @"Software\Classes\Directory\shell\TinyGuardScan", @"Software\Classes\AllFilesystemObjects\shell\TinyGuardScan", @"Software\Classes\Drive\shell\TinyGuardScan", @"Software\Classes\lnkfile\shell\TinyGuardScan", @"Software\Classes\InternetShortcut\shell\TinyGuardScan" };     // shortcuts have their own class, which some (run-as-administrator ones) use instead of the general one
+        static readonly string[] Roots = { @"Software\Classes\*\shell\VisuallySafeScan", @"Software\Classes\Directory\shell\VisuallySafeScan", @"Software\Classes\AllFilesystemObjects\shell\VisuallySafeScan", @"Software\Classes\Drive\shell\VisuallySafeScan", @"Software\Classes\lnkfile\shell\VisuallySafeScan", @"Software\Classes\InternetShortcut\shell\VisuallySafeScan" };     // shortcuts have their own class, which some (run-as-administrator ones) use instead of the general one
         static string OptOut(Engine e) { return Path.Combine(e.DataDir, "no-shellmenu.txt"); }
 
         public static bool Wanted(Engine e) { return !File.Exists(OptOut(e)); }

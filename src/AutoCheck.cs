@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>
     /// The twice-a-week check for family helper mode: Monday and Thursday around noon, or about three minutes after start-up if a week has gone by

@@ -14,7 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     enum NSev { Ok, Info, Warn, Fail }
 

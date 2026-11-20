@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     static class IdleInfo
     {
@@ -310,10 +310,10 @@ namespace TinyGuard
         [DllImport("user32.dll", SetLastError = true)] static extern bool SystemParametersInfo(uint action, uint param, IntPtr v, uint flags);
         const string DesktopKey = @"Control Panel\Desktop";
 
-        public static string ScrPathFor(string mode) { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mode == "defrag" ? "TinyGuardDefrag.scr" : "TinyGuard.scr"); }
+        public static string ScrPathFor(string mode) { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mode == "defrag" ? "VisuallySafeDefrag.scr" : "VisuallySafe.scr"); }
         public static string ScrPath { get { return ScrPathFor("scan"); } }
 
-        /// <summary>Keeps TinyGuard.scr the same as TinyGuard.exe (after an update).</summary>
+        /// <summary>Keeps VisuallySafe.scr the same as VisuallySafe.exe (after an update).</summary>
         public static void SyncCopy()
         {
             foreach (string mode in new[] { "scan", "defrag" })
@@ -636,10 +636,10 @@ namespace TinyGuard
         }
     }
 
-    /// <summary>Lets TinyGuard.scr (started by Windows) ask the running Visually Safe to show the screen saver.</summary>
+    /// <summary>Lets VisuallySafe.scr (started by Windows) ask the running Visually Safe to show the screen saver.</summary>
     static class SaverPipe
     {
-        static string NameFor(string dataDir) { return "TinyGuardPipe-" + (Environment.UserName + "|" + dataDir.ToLowerInvariant()).GetHashCode().ToString("x"); }
+        static string NameFor(string dataDir) { return "VisuallySafePipe-" + (Environment.UserName + "|" + dataDir.ToLowerInvariant()).GetHashCode().ToString("x"); }
 
         public static string ModeOf(string cmd) { return cmd == "SAVER-DEFRAG" ? "defrag" : cmd == "SAVER-SCAN" ? "scan" : null; }
 
@@ -680,7 +680,7 @@ namespace TinyGuard
             th.Start();
         }
 
-        /// <summary>Sends a command to a running TinyGuard. Returns false if none is running. With wait, blocks until it reports done.</summary>
+        /// <summary>Sends a command to a running Visually Safe. Returns false if none is running. With wait, blocks until it reports done.</summary>
         public static bool TryClient(string dataDir, string cmd, bool wait)
         {
             // Many launches can arrive at once (a whole selection of icons), and the pipe serves one at a time: wait our turn.

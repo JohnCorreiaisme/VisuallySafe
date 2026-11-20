@@ -5,7 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Draws Visually Safe's program icon (a green shield with a check on a dark tile) and packs it into a multi-size .ico file.</summary>
     static class IconMaker

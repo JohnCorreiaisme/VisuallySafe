@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Win32;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     enum Sev { Note = 0, Warn = 1, Bad = 2 }
 
@@ -71,7 +71,7 @@ namespace TinyGuard
         static HttpClient MakeHttp()
         {
             var h = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-            h.DefaultRequestHeaders.UserAgent.ParseAdd("TinyGuard/" + Engine.Version);
+            h.DefaultRequestHeaders.UserAgent.ParseAdd("VisuallySafe/" + Engine.Version);
             return h;
         }
 

@@ -1,4 +1,4 @@
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Step-by-step answers for the most common problems. They are what the wizard says when no AI is available, and what he looks up first when one is.
     /// Each answer has a calm opening, numbered steps, and a closing line. {who} becomes the name of the family member to ask.</summary>

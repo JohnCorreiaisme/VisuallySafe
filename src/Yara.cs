@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     class YaraHit { public string Rule = "", Description = ""; public int Score; }
 
@@ -22,7 +22,7 @@ namespace TinyGuard
     class Yara
     {
         readonly string yara, yarac, bundledCore, dataCore, userDir, compiled, dataDir;
-        // Updated rules live in the data folder and win over the copy that shipped with TinyGuard.
+        // Updated rules live in the data folder and win over the copy that shipped with Visually Safe.
         string core { get { return File.Exists(dataCore) ? dataCore : bundledCore; } }
         public string RulesVersion { get { return ReadVersion(core); } }
         public DateTime LastCheck = DateTime.MinValue;
@@ -105,7 +105,7 @@ namespace TinyGuard
         static HttpClient MakeHttp()
         {
             var h = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
-            h.DefaultRequestHeaders.UserAgent.ParseAdd("TinyGuard/" + Engine.Version);
+            h.DefaultRequestHeaders.UserAgent.ParseAdd("VisuallySafe/" + Engine.Version);
             return h;
         }
 

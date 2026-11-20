@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>The choice box: lists what can be done about an item and lets the user pick exactly one (or cancel).</summary>
     class FixOptionsForm : Form
@@ -150,7 +150,7 @@ namespace TinyGuard
 
             bool ok = chosen.State == ActState.Done;
             string note = !ok ? "" : chosen.Type == "update" ? "\n\nRestart the program (or the PC, for a driver) so the new version is used."
-                                   : chosen.Type == "ignore" ? "\n\nTinyGuard won't flag this again."
+                                   : chosen.Type == "ignore" ? "\n\nVisually Safe won't flag this again."
                                    : "\n\nRun the rootkit check again if you want to confirm it's fixed.";
             MessageBox.Show(owner, (ok ? "✔ " : "✘ ") + chosen.Title + (ok ? "" : "\n\n" + chosen.Message) + note,
                 ok ? "Fixed" : "Couldn't finish", MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);

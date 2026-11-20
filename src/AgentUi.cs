@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>The approval box shown before an agent is started: what it is, how it will run, and exactly what it will be told.</summary>
     class AgentDialog : Form
@@ -277,7 +277,7 @@ namespace TinyGuard
             string summary;
             var steps = Agents.InstallSteps(agent, out summary);
             if (steps == null) { MessageBox.Show(owner, summary + "\n\n" + agent.Install, agent.Name, MessageBoxButtons.OK, MessageBoxIcon.Information); return false; }
-            if (MessageBox.Show(owner, "Install " + agent.Name + " on this PC?\n\nTinyGuard will:\n" + summary +
+            if (MessageBox.Show(owner, "Install " + agent.Name + " on this PC?\n\nVisually Safe will:\n" + summary +
                     "\n\nThis downloads the official " + agent.Vendor + " package from the npm registry and installs it for your Windows user. You'll be asked to sign in to " + agent.Name + " afterwards.",
                     "Install " + agent.Name, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return false;
             bool ok;

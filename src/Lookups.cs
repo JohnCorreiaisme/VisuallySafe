@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Web.Script.Serialization;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Checks a file's Authenticode signature with Windows' own trust engine.</summary>
     static class Trust
@@ -184,7 +184,7 @@ namespace TinyGuard
         static HttpClient Make()
         {
             var h = new HttpClient { Timeout = TimeSpan.FromSeconds(8) };
-            h.DefaultRequestHeaders.UserAgent.ParseAdd("TinyGuard/" + Engine.Version);
+            h.DefaultRequestHeaders.UserAgent.ParseAdd("VisuallySafe/" + Engine.Version);
             return h;
         }
 

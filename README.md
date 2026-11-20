@@ -41,7 +41,7 @@ alongside Windows Defender; it does not replace it.
 
 ## Run
 
-    bin\TinyGuard.exe
+    bin\VisuallySafe.exe
 
 A shield appears next to the clock. Left-click opens the dashboard; right-click has
 Protection on/off, Pause, Quick scan, Scan a file, Start with Windows and Exit.
@@ -64,13 +64,13 @@ When a program, script, macro document, shortcut or archive lands in a watched f
    MalwareBazaar (only if you add a free key), CIRCL hashlookup -> Malware or Known good.
 4. Nobody knows it: the YARA engine (`bin\yara\yara64.exe`, VirusTotal YARA 4.6.0) checks it
    against the YARA-Forge "core" rule set (`bin\yara\core.yar`, ~5,000 rules) plus your own
-   rules in `%LOCALAPPDATA%\TinyGuard\rules\*.yar`. A rule with `score` 80+ in its meta means
+   rules in `%LOCALAPPDATA%\VisuallySafe\rules\*.yar`. A rule with `score` 80+ in its meta means
    Malware (quarantined); lower means Suspicious. Works on scripts too.
    Rule updates: once a day (first check 2 minutes after start, only while "Check files online"
    is on) Visually Safe asks GitHub for the newest YARA-Forge release. A newer core set is
-   downloaded, test-compiled, and only then swapped in as `%LOCALAPPDATA%\TinyGuard\core.yar`
+   downloaded, test-compiled, and only then swapped in as `%LOCALAPPDATA%\VisuallySafe\core.yar`
    (it wins over the bundled copy). Settings shows the rules version and has an "Update rules" button.
-5. Still nobody knows it, and it is a program: the offline AI model (`bin\tinyguard.model`, 1.4 MB)
+5. Still nobody knows it, and it is a program: the offline AI model (`bin\visuallysafe.model`, 1.4 MB)
    scores it. 90% or more marks it Suspicious; lower scores are shown in Activity.
    Trained on EMBER 2018: at 90% it caught 78% of unseen malware with 0.73% false alarms on
    the test set, and 0 of 210 real programs on this PC were flagged.
@@ -141,7 +141,7 @@ those the AI can only explain what to do by hand.
 
 Settings > Screen saver. **Deep-scan slowly when I'm away** starts a full-screen display when the PC has been idle
 for the time you pick (1 to 30 minutes; not while a game or video is full screen, not on battery). **Use Visually Safe
-as the Windows screen saver** registers `TinyGuard.scr` (a copy of the exe) in Windows' own screen saver setting
+as the Windows screen saver** registers `VisuallySafe.scr` (a copy of the exe) in Windows' own screen saver setting
 and remembers what was there before so turning it off puts it back; Windows then decides when it starts (and
 Visually Safe's own idle timer is switched off). **Start screen saver now** and the tray menu start it instantly.
 Moving the mouse or pressing a key ends it.
@@ -230,7 +230,7 @@ A kernel rootkit can fool all of it, so the page also has a **Defender Offline s
 
 ## Files
 
-Everything lives in `%LOCALAPPDATA%\TinyGuard`: `settings.ini`, `history.tsv`, `cache.tsv`,
+Everything lives in `%LOCALAPPDATA%\VisuallySafe`: `settings.ini`, `history.tsv`, `cache.tsv`,
 `programs.tsv`, `quarantine.tsv`, `Quarantine\`, `rules\`, and two lists you can edit by hand,
 one SHA-256 per line: `blocklist.txt` and `allowlist.txt`.
 
@@ -260,8 +260,8 @@ ootkit-test.log`.
 - `--features <file> [--out <file>]`: write a file's AI features and score.
 
 ## 1.0.4 additions
-- **Defrag screen saver**: Settings > "shows: defrag only" (or tray > "Start defrag screen saver now", or the Defrag screen saver button). It shows only the classic coloured block map with moving blocks. Registering with Windows installs `TinyGuardDefrag.scr` next to the exe. Without administrator rights it shows a clearly labelled demo drive.
-- **Real program icon**: `TinyGuard.ico` (green shield on a dark tile, 16-256 px) is built into the exe, so Explorer, the taskbar, windows and the .scr all use it.
+- **Defrag screen saver**: Settings > "shows: defrag only" (or tray > "Start defrag screen saver now", or the Defrag screen saver button). It shows only the classic coloured block map with moving blocks. Registering with Windows installs `VisuallySafeDefrag.scr` next to the exe. Without administrator rights it shows a clearly labelled demo drive.
+- **Real program icon**: `VisuallySafe.ico` (green shield on a dark tile, 16-256 px) is built into the exe, so Explorer, the taskbar, windows and the .scr all use it.
 
 ## 1.0.5: fewer false alarms
 - UPX-compressed files are no longer flagged for being compressed; soft clues (scrambled data, big installer data, odd entry section) now only count when firmer evidence exists, and the deep-scan bar is 4 points.
@@ -306,8 +306,8 @@ An AI agent is told what Visually Safe does (this README and the list of source 
 - The agent works only on the copy: Claude Code gets no command line (Read/Write/Edit/Glob/Grep only), Codex runs in a workspace-only sandbox.
 - Visually Safe then lists what changed, warns about new web addresses, new process/registry/download code, and large deletions, builds it, and runs the new program's self-test (a blocked file is caught, a script dropper is flagged, a harmless script and 30 normal Windows programs are not).
 - `src/SelfUpdate.cs` and `src/SelfUpdateUi.cs` are protected: an update that changes them is refused.
-- Nothing is installed until you click Install. The old source is saved in `%LOCALAPPDATA%\TinyGuard\update\backup`, the old program is kept as `TinyGuard.exe.old`, and a hidden watcher puts it back if the new version isn't confirmed healthy after two minutes. The source is updated in the project folder but not committed to git (review with `git diff`).
-- Needs the source folder (TinyGuard.csproj) next to the program and the .NET SDK. The self-test and reading the summary are a safety net, not proof: read what it changed.
+- Nothing is installed until you click Install. The old source is saved in `%LOCALAPPDATA%\VisuallySafe\update\backup`, the old program is kept as `VisuallySafe.exe.old`, and a hidden watcher puts it back if the new version isn't confirmed healthy after two minutes. The source is updated in the project folder but not committed to git (review with `git diff`).
+- Needs the source folder (VisuallySafe.csproj) next to the program and the .NET SDK. The self-test and reading the summary are a safety net, not proof: read what it changed.
 - Also fixed: the Family helper window was not scaling on high-DPI screens.
 
 ## 1.0.15
@@ -340,7 +340,7 @@ An AI agent is told what Visually Safe does (this README and the list of source 
 - Network: the alt-click / right-click menu on a program now also has "Ask AI about this program (repair / is it safe)...", which lists the installed AI agents (Claude Code, Codex) and hands them that program's details.
 
 ## 1.0.25
-- AI agents can now contain a program: the instructions given to Claude Code / Codex include `TinyGuard.exe --net-block "path"`, `--net-unblock "path"` and `--stop-program "path"` (one program only, never Visually Safe itself; admin needed for the firewall ones). Every use is logged in `agent-actions.log`.
+- AI agents can now contain a program: the instructions given to Claude Code / Codex include `VisuallySafe.exe --net-block "path"`, `--net-unblock "path"` and `--stop-program "path"` (one program only, never Visually Safe itself; admin needed for the firewall ones). Every use is logged in `agent-actions.log`.
 
 ## 1.0.26
 - Net tools: the status line above the results (for example after "Open ports on this PC") was cut off at the bottom by the list; it now shows fully.
@@ -363,9 +363,9 @@ New **Shields** page (last item in the sidebar).
 - **Ransomware shield**: watches Documents, Pictures, Desktop, Videos and Music. A hidden canary file (`!~tinyguard-canary.docx`) sits in each folder; if anything changes, renames or deletes it, or about 8 files turn into scrambled data (wrong file header plus noise-like contents) or get renamed to odd extensions within 20 seconds, Visually Safe finds the programs writing the most data that are not Windows or a trusted publisher, stops them, cuts their internet and quarantines them (switchable to warn-only). Build and cache folders (`bin`, `obj`, `.git`, `node_modules`, …) and your safe folders are ignored. "Test it safely" runs a made-up ransomware in a throw-away folder.
 - **Web blocklist**: blocks known malware and phishing websites for every program by pointing them at 0.0.0.0 in the Windows hosts file (free lists from URLhaus and Phishing Army, refreshed daily, at most 40,000 sites; Microsoft, Google, GitHub and similar are never blocked). Needs administrator rights, keeps a backup (`hosts.original.bak`), only touches its own marked block, has custom Block / Allow and a "Check a domain" box. Off by default: switch it on in Shields. It can't stop a browser that uses its own encrypted DNS.
 - **Malware fingerprint feed**: with your free abuse.ch key (Settings) Visually Safe pulls the newest MalwareBazaar fingerprints every 12 hours into its block list. (abuse.ch's keyless downloads were switched off, so the key is required.)
-- **Self-protection**: warns if Visually Safe's program file (same version, different fingerprint) or its settings file are changed behind its back (and puts the protection setting back), restarts Visually Safe within 2 minutes if something kills it (scheduled task "Visually Safe Watchdog"; not after you use Exit), and optionally stops ordinary programs from ending or injecting into it.
+- **Self-protection**: warns if Visually Safe's program file (same version, different fingerprint) or its settings file are changed behind its back (and puts the protection setting back), restarts Visually Safe within 2 minutes if something kills it (scheduled task "VisuallySafe Watchdog"; not after you use Exit), and optionally stops ordinary programs from ending or injecting into it.
 - `tools\release.ps1` builds and zips a release (and signs it if you pass a code-signing certificate thumbprint); `tools\install.ps1` installs it to Program Files with a Start menu shortcut and start-at-logon. Real trust from Windows needs a certificate from a trusted authority, which Visually Safe can't make for itself.
-- Developer check: `TinyGuard.exe --shield-test result.txt` runs the ransomware simulation and the list and feed parsers.
+- Developer check: `VisuallySafe.exe --shield-test result.txt` runs the ransomware simulation and the list and feed parsers.
 
 ## 1.0.32
 - Rest the mouse on a Desktop or Explorer icon that Visually Safe already scanned and its result badge (green tick, yellow warning or red cross in a coloured box) shows again, for as long as you choose after the scan: 12 hours, 24 hours, 48 hours (default), 7 days, never, or off. Set it on the Settings page, next to the quarantine option.

@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>One picture of how a drive is laid out: blocks of clusters, who owns each, and how many pieces each file is in.</summary>
     class DiskSnapshot

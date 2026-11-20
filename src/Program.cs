@@ -9,7 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Lives in the notification area and owns the engine, the tray icon and the dashboard.</summary>
     class TrayApp : ApplicationContext
@@ -255,7 +255,7 @@ namespace TinyGuard
         }
     }
 
-    /// <summary>Runs only the screen saver (when Windows starts TinyGuard.scr and Visually Safe isn't already running).</summary>
+    /// <summary>Runs only the screen saver (when Windows starts VisuallySafe.scr and Visually Safe isn't already running).</summary>
     /// <summary>A system-wide hotkey (Ctrl+Alt+S) that scans whatever icons are selected.</summary>
     class HotKeyWindow : NativeWindow, IDisposable
     {
@@ -299,7 +299,7 @@ namespace TinyGuard
             {
                 if (!Admin.IsAdmin) return "Failed: this needs administrator rights (run the command from an elevated prompt).";
                 string err = sw == "--net-block" ? Firewall.Block(path) : Firewall.Unblock(path);
-                return err == null ? "OK: " + (sw == "--net-block" ? "internet blocked for " : "internet allowed again for ") + path + (sw == "--net-block" ? " (undo: TinyGuard.exe --net-unblock \"" + path + "\")" : "") : "Failed: Windows Firewall said: " + err;
+                return err == null ? "OK: " + (sw == "--net-block" ? "internet blocked for " : "internet allowed again for ") + path + (sw == "--net-block" ? " (undo: VisuallySafe.exe --net-unblock \"" + path + "\")" : "") : "Failed: Windows Firewall said: " + err;
             }
             int n = 0, denied = 0;
             foreach (var p in System.Diagnostics.Process.GetProcesses())
@@ -319,11 +319,15 @@ namespace TinyGuard
             Application.SetCompatibleTextRenderingDefault(false);
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) Theme.K = g.DpiX / 96f;
 
-            string dataDir = Environment.GetEnvironmentVariable("TINYGUARD_DATA");
-            if (string.IsNullOrEmpty(dataDir))
-                dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TinyGuard");
+            string dataDir = Environment.GetEnvironmentVariable("VISUALLYSAFE_DATA");
+            if (string.IsNullOrEmpty(dataDir)) dataDir = Environment.GetEnvironmentVariable("TINYGUARD_DATA");
+            bool defaultData = string.IsNullOrEmpty(dataDir);
+            if (defaultData)
+                dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VisuallySafe");
             dataDir = Path.GetFullPath(dataDir);
+            if (defaultData) LegacyName.MigrateData(dataDir);
             Directory.CreateDirectory(dataDir);
+            if (defaultData) LegacyName.CleanUser();
             // Write anything that would crash Visually Safe to crash.log, so a silent exit can be explained.
             string crashLog = Path.Combine(dataDir, "crash.log");
             Action<string, object> logCrash = (where, ex) =>
@@ -331,7 +335,7 @@ namespace TinyGuard
                 try { File.AppendAllText(crashLog, DateTime.Now.ToString("s") + " [" + where + "] admin=" + Admin.IsAdmin + Environment.NewLine + ex + Environment.NewLine + Environment.NewLine); } catch { }
             };
             // Actions an AI agent (or you) can run from a command line: cut one program's internet, give it back, or stop that program.
-            //   TinyGuard.exe --net-block "C:\path\app.exe"    TinyGuard.exe --net-unblock "C:\path\app.exe"    TinyGuard.exe --stop-program "C:\path\app.exe"
+            //   VisuallySafe.exe --net-block "C:\path\app.exe"    VisuallySafe.exe --net-unblock "C:\path\app.exe"    VisuallySafe.exe --stop-program "C:\path\app.exe"
             foreach (string sw in new[] { "--net-block", "--net-unblock", "--stop-program" })
             {
                 string target = Arg(args, sw); if (target == null) continue;
@@ -357,7 +361,7 @@ namespace TinyGuard
                 var x = AiModel.Features(File.ReadAllBytes(feat));
                 var lines = new System.Collections.Generic.List<string>();
                 foreach (float v in x) lines.Add(v.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
-                var m = AiModel.TryLoad(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tinyguard.model"));
+                var m = AiModel.TryLoad(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "visuallysafe.model"));
                 lines.Add(m != null ? m.Predict(x).ToString("R", System.Globalization.CultureInfo.InvariantCulture) : "-1");
                 File.WriteAllLines(Arg(args, "--out") ?? feat + ".tgf", lines);
                 return 0;
@@ -392,7 +396,7 @@ namespace TinyGuard
                     var p = Process.Start(new ProcessStartInfo("netsh.exe", cmd) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true });
                     string o = p.StandardOutput.ReadToEnd(); p.WaitForExit(); return o;
                 };
-                log.AppendLine(sh("advfirewall firewall show rule name=\"TinyGuard block out: " + netTest + "\" verbose"));
+                log.AppendLine(sh("advfirewall firewall show rule name=\"VisuallySafe block out: " + netTest + "\" verbose"));
                 log.AppendLine(sh("advfirewall firewall add rule name=TGDIAG dir=out action=block program=\"" + netTest + "\" enable=yes"));
                 System.Threading.Thread.Sleep(1000);
                 log.AppendLine("download with netsh-made rule too, exit code: " + curl());
@@ -484,7 +488,7 @@ namespace TinyGuard
                 string prog = Path.Combine(dir, "tg-fixtest.exe");
                 File.WriteAllBytes(prog, new byte[] { (byte)'M', (byte)'Z', 1, 2, 3, 4, 5, 6, 7, 8 });
                 const string runKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(runKey, true)) k.SetValue("TinyGuardFixTest", "\"" + prog + "\"");
+                using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(runKey, true)) k.SetValue("VisuallySafeFixTest", "\"" + prog + "\"");
                 try
                 {
                     using (var e = new Engine(dataDir))
@@ -502,15 +506,15 @@ namespace TinyGuard
                         foreach (var a in rp.Actions) lg.AppendLine("proposed: " + a.Type + " -> " + a.State + " " + a.Message);
                         foreach (var a in rp.Actions.Where(x => x.State == ActState.Pending)) { Assistant.Apply(a, e); lg.AppendLine("applied: " + a.Type + " -> " + a.State + " " + a.Message); }
                         using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(runKey))
-                            lg.AppendLine("registry value still there: " + (k.GetValue("TinyGuardFixTest") != null));
+                            lg.AppendLine("registry value still there: " + (k.GetValue("VisuallySafeFixTest") != null));
                         lg.AppendLine("program file still there: " + File.Exists(prog) + " | quarantine entries: " + e.QuarantineSnapshot().Count);
                         string bk = Path.Combine(dataDir, "startup-removed.tsv");
-                        lg.AppendLine("backup of the entry saved: " + (File.Exists(bk) && File.ReadAllText(bk).Contains("TinyGuardFixTest")));
+                        lg.AppendLine("backup of the entry saved: " + (File.Exists(bk) && File.ReadAllText(bk).Contains("VisuallySafeFixTest")));
                     }
                 }
                 finally
                 {
-                    using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(runKey, true)) k.DeleteValue("TinyGuardFixTest", false);
+                    using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(runKey, true)) k.DeleteValue("VisuallySafeFixTest", false);
                 }
                 File.WriteAllText(Path.Combine(dataDir, "fix-test.log"), lg.ToString());
                 return 0;
@@ -701,7 +705,7 @@ namespace TinyGuard
             if (Array.IndexOf(args, "--saver-reg-test") >= 0)   // developer aid: register/unregister the Windows screen saver on a scratch registry key (never the real settings), and try the pipe
             {
                 var lg = new System.Text.StringBuilder();
-                const string scratch = @"Software\TinyGuardTest\Desktop";
+                const string scratch = @"Software\VisuallySafeTest\Desktop";
                 using (var k = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(scratch)) { k.SetValue("SCRNSAVE.EXE", @"C:\Windows\System32\Bubbles.scr"); k.SetValue("ScreenSaveActive", "1"); k.SetValue("ScreenSaveTimeOut", "900"); }
                 var st = Settings.Load(dataDir);
                 SystemSaver.Enable(st, 7, scratch, false);
@@ -710,7 +714,7 @@ namespace TinyGuard
                 SystemSaver.Disable(st, scratch, false);
                 using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(scratch))
                     lg.AppendLine("after disable: scr=" + k.GetValue("SCRNSAVE.EXE") + " active=" + k.GetValue("ScreenSaveActive") + " timeout=" + k.GetValue("ScreenSaveTimeOut") + " | registered=" + SystemSaver.IsRegistered(scratch));
-                Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(@"Software\TinyGuardTest", false);
+                Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(@"Software\VisuallySafeTest", false);
                 try { File.Delete(SystemSaver.ScrPath); } catch { }
                 string got = null;
                 SaverPipe.StartServer(dataDir, (cmd, done) => { got = cmd; done(); });
@@ -1048,7 +1052,7 @@ namespace TinyGuard
                     MessageBox.Show("Visually Safe isn't running. Start it from the Start menu, then try again.", "Visually Safe", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return 0;
             }
-            // the defrag screen saver is the same program under another name (TinyGuardDefrag.scr)
+            // the defrag screen saver is the same program under another name (VisuallySafeDefrag.scr)
             string saverCmd = Path.GetFileNameWithoutExtension(Application.ExecutablePath).IndexOf("Defrag", StringComparison.OrdinalIgnoreCase) >= 0 || args.Contains("--defrag-saver") ? "SAVER-DEFRAG" : "SAVER";
             if (saverArg && SaverPipe.TryClient(dataDir, saverCmd, true)) return 0;     // the running Visually Safe shows it
             if (cfgArg && SaverPipe.TryClient(dataDir, "SETTINGS", false)) return 0;
@@ -1060,7 +1064,7 @@ namespace TinyGuard
             int page = int.Parse(Arg(args, "--page") ?? "0");
 
             bool mine;
-            using (var mutex = new System.Threading.Mutex(true, "TinyGuard-" + dataDir.ToLowerInvariant().GetHashCode().ToString("x"), out mine))
+            using (var mutex = new System.Threading.Mutex(true, "VisuallySafe-" + dataDir.ToLowerInvariant().GetHashCode().ToString("x"), out mine))
             {
                 if (!mine)
                 {

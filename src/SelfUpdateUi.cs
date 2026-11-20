@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>
     /// "Update Visually Safe with AI": copies the source, tells an AI agent what Visually Safe does and asks it whether Visually Safe needs more,
@@ -65,7 +65,7 @@ namespace TinyGuard
             {
                 FitLabels.Apply(this);
                 string src = SelfUpdate.SourceDir();
-                if (src == null) Say("The source code wasn't found next to this copy of Visually Safe, so it can't update itself. (It looks for a folder with TinyGuard.csproj above the program's folder.)");
+                if (src == null) Say("The source code wasn't found next to this copy of Visually Safe, so it can't update itself. (It looks for a folder with VisuallySafe.csproj above the program's folder.)");
                 else Say("Source code: " + src);
                 if (SelfUpdate.DotNet() == null) Say("The .NET SDK wasn't found. Without it Visually Safe can't build an update.");
                 Task.Run(() => { try { agents = Agents.Detect(); } catch { } BeginInvoke(new Action(Refresh2)); });
@@ -158,7 +158,7 @@ namespace TinyGuard
         void InstallNow()
         {
             if (report == null || !built) return;
-            string msg = "Install this update?\r\n\r\nTinyGuard will:\r\n- keep a copy of the current source and program,\r\n- put the new source in the project folder (not committed to git),\r\n- restart as the new version.\r\n\r\nIf the new version doesn't stay running, the old one comes back by itself." +
+            string msg = "Install this update?\r\n\r\nVisually Safe will:\r\n- keep a copy of the current source and program,\r\n- put the new source in the project folder (not committed to git),\r\n- restart as the new version.\r\n\r\nIf the new version doesn't stay running, the old one comes back by itself." +
                          (report.Warnings.Count > 0 ? "\r\n\r\nThere were " + report.Warnings.Count + " WATCH OUT notes. Have you read them?" : "");
             if (MessageBox.Show(this, msg, "Install update", MessageBoxButtons.YesNo, report.Warnings.Count > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             string err = SelfUpdate.Install(eng, session, report);

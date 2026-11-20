@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     // =====================================================================================================
     // AI self-update. PROTECTED CODE: the update checks below are the safety net, so an AI agent that is
@@ -35,11 +35,11 @@ namespace TinyGuard
     static class SelfUpdate
     {
         public static readonly string[] Protected = { "src/SelfUpdate.cs", "src/SelfUpdateUi.cs" };
-        static readonly string[] Tracked = { "TinyGuard.csproj", "app.manifest", "TinyGuard.ico", "README.md" };
+        static readonly string[] Tracked = { "VisuallySafe.csproj", "app.manifest", "VisuallySafe.ico", "README.md" };
 
         public static string Root(Engine eng) { string d = Path.Combine(eng.DataDir, "update"); Directory.CreateDirectory(d); return d; }
 
-        /// <summary>The project folder with the source code (TinyGuard.csproj), found next to the installed program.</summary>
+        /// <summary>The project folder with the source code (VisuallySafe.csproj), found next to the installed program.</summary>
         public static string SourceDir()
         {
             try
@@ -48,7 +48,7 @@ namespace TinyGuard
                 for (int i = 0; i < 3 && d != null; i++)
                 {
                     d = Path.GetDirectoryName(d);
-                    if (d != null && File.Exists(Path.Combine(d, "TinyGuard.csproj")) && Directory.Exists(Path.Combine(d, "src"))) return d;
+                    if (d != null && File.Exists(Path.Combine(d, "VisuallySafe.csproj")) && Directory.Exists(Path.Combine(d, "src"))) return d;
                 }
             }
             catch { }
@@ -73,7 +73,7 @@ namespace TinyGuard
         public static UpdateSession Prepare(Engine eng)
         {
             string src = SourceDir();
-            if (src == null) throw new InvalidOperationException("The source code wasn't found next to Visually Safe (a folder with TinyGuard.csproj and src).");
+            if (src == null) throw new InvalidOperationException("The source code wasn't found next to Visually Safe (a folder with VisuallySafe.csproj and src).");
             var s = new UpdateSession { Source = src, Root = Path.Combine(Root(eng), DateTime.Now.ToString("yyyyMMdd-HHmmss")) };
             s.Orig = Path.Combine(s.Root, "orig"); s.Work = Path.Combine(s.Root, "work"); s.Out = Path.Combine(s.Root, "out");
             foreach (string dest in new[] { s.Orig, s.Work })
@@ -108,12 +108,12 @@ namespace TinyGuard
             sb.AppendLine("1. Read README.md and skim the source (start with src/Engine.cs, src/DeepScan.cs, src/ProcWatch.cs).");
             sb.AppendLine("2. Write ASSESSMENT.md: what Visually Safe already covers, and what a good AI antivirus would also cover that it doesn't yet. Think about current real-world threats (script and macro droppers, shortcut (.lnk) abuse, living-off-the-land binaries, persistence tricks, ransomware behaviour, signed-driver abuse, browser-extension and fake-installer threats), and about reducing false alarms.");
             sb.AppendLine("3. Choose AT MOST THREE improvements that are small, safe and clearly useful, and implement them.");
-            sb.AppendLine("4. Raise the version number (TinyGuard.csproj <Version>, app.manifest assemblyIdentity, and Engine.Version in src/Engine.cs) and add a short section to README.md.");
+            sb.AppendLine("4. Raise the version number (VisuallySafe.csproj <Version>, app.manifest assemblyIdentity, and Engine.Version in src/Engine.cs) and add a short section to README.md.");
             sb.AppendLine("5. Write CHANGES.md: for each change say WHAT it does, WHY, the RISK (including false alarms), and HOW TO UNDO it.");
             sb.AppendLine("If nothing is worth changing, change nothing and say so in ASSESSMENT.md.");
             sb.AppendLine();
             sb.AppendLine("## Rules (the owner will check these)");
-            sb.AppendLine("- Only create or edit files inside this folder. You cannot run commands; Visually Safe builds the code afterwards, so it must compile as C# 9 on .NET Framework 4.8 using only the assemblies already referenced in TinyGuard.csproj (add a reference only if you must, and say so).");
+            sb.AppendLine("- Only create or edit files inside this folder. You cannot run commands; Visually Safe builds the code afterwards, so it must compile as C# 9 on .NET Framework 4.8 using only the assemblies already referenced in VisuallySafe.csproj (add a reference only if you must, and say so).");
             sb.AppendLine("- Do NOT edit src/SelfUpdate.cs or src/SelfUpdateUi.cs. They are the update safety checks, and an update that changes them is refused.");
             sb.AppendLine("- Never weaken protection: do not remove or skip scan steps, raise detection thresholds to hide findings, add exclusions or safe-lists, loosen quarantine, or turn anything off.");
             sb.AppendLine("- No new network destinations except well-known FREE malware-definition sources, no telemetry, and nothing that downloads and runs code. No new startup or persistence entries. No hidden behaviour.");
@@ -226,7 +226,7 @@ namespace TinyGuard
                 p.WaitForExit();
                 var errs = o.ToString().Split('\n').Where(l => l.Contains(" error ")).Select(l => l.Trim()).Distinct().Take(8).ToList();
                 foreach (string e in errs) log(e.Length > 220 ? e.Substring(0, 220) : e);
-                return p.ExitCode == 0 && File.Exists(Path.Combine(s.Out, "TinyGuard.exe"));
+                return p.ExitCode == 0 && File.Exists(Path.Combine(s.Out, "VisuallySafe.exe"));
             }
         }
 
@@ -235,7 +235,7 @@ namespace TinyGuard
         {
             string result = Path.Combine(s.Root, "selftest.txt");
             try { File.Delete(result); } catch { }
-            var psi = new ProcessStartInfo(Path.Combine(s.Out, "TinyGuard.exe"), "--selftest \"" + result + "\"") { UseShellExecute = false, CreateNoWindow = true };
+            var psi = new ProcessStartInfo(Path.Combine(s.Out, "VisuallySafe.exe"), "--selftest \"" + result + "\"") { UseShellExecute = false, CreateNoWindow = true };
             using (var p = Process.Start(psi))
             {
                 if (!p.WaitForExit(180000)) { AgentRunner.Kill(p); log("The new program's self-test took too long."); return false; }
@@ -294,7 +294,7 @@ namespace TinyGuard
         public static string Install(Engine eng, UpdateSession s, UpdateReport rep)
         {
             if (!rep.Ok) return "This update has problems and can't be installed.";
-            string src = s.Source, exe = Application.ExecutablePath, newExe = Path.Combine(s.Out, "TinyGuard.exe");
+            string src = s.Source, exe = Application.ExecutablePath, newExe = Path.Combine(s.Out, "VisuallySafe.exe");
             if (!File.Exists(newExe)) return "The new program wasn't built.";
             string backup = Path.Combine(Root(eng), "backup", Path.GetFileName(s.Root));
             try
@@ -315,7 +315,7 @@ namespace TinyGuard
                 try { if (File.Exists(old)) File.Delete(old); } catch { }
                 File.Move(exe, old);
                 File.Copy(newExe, exe, true);
-                string cfg = Path.Combine(s.Out, "TinyGuard.exe.config"); if (File.Exists(cfg)) File.Copy(cfg, exe + ".config", true);
+                string cfg = Path.Combine(s.Out, "VisuallySafe.exe.config"); if (File.Exists(cfg)) File.Copy(cfg, exe + ".config", true);
             }
             catch (Exception ex) { return "Installing failed: " + ex.Message + ". The old program is still in place."; }
 

@@ -5,7 +5,7 @@ shots/
 .vs/
 # the installed copy; the model and YARA engine are kept below
 bin/*
-!bin/tinyguard.model
+!bin/visuallysafe.model
 dist/
 installer/payload.zip
 installer/obj/

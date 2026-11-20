@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Everyday help the wizard can say or look up: short tips, and step-by-step answers to the problems older people run into most.
     /// {who} is replaced by the name of the family member the wizard tells people to ask.</summary>

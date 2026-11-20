@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>
     /// Small offline malware model (gradient-boosted trees trained on EMBER 2018, see train/train.py).

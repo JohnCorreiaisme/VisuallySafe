@@ -5,7 +5,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Microsoft Defender's own verdict on a file, asked through its command-line scanner (MpCmdRun.exe).
     /// Report only: -DisableRemediation means Defender never removes anything on Visually Safe's behalf.</summary>

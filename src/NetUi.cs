@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Network page: live download/upload per program with a one-minute graph, and Block/Unblock.</summary>
     class NetworkView : Panel
@@ -64,7 +64,7 @@ namespace TinyGuard
             var why = new Label
             {
                 Text = "Seeing each program's traffic and blocking programs from the internet both use Windows' own " +
-                       "network tools, which need administrator rights.\n\nTinyGuard will restart as administrator " +
+                       "network tools, which need administrator rights.\n\nVisually Safe will restart as administrator " +
                        "(Windows asks you once). If \"Start with Windows\" is on, it will start that way from then on.",
                 ForeColor = Theme.Text, AutoSize = true
             };

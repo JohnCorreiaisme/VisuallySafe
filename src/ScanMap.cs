@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>What the map knows about one file.</summary>
     enum FState { Clean, KnownGood, Unknown, Suspicious, Malicious, Gone, NotScanned, Skipped }

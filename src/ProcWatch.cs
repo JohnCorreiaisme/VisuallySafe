@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>
     /// Notices programs as they start (polls the process list once a second; works without admin rights)

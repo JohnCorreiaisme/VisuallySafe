@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Explains the selected rootkit-check finding and what to do about it.</summary>
     class FindingDetail : Painted

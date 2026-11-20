@@ -12,7 +12,7 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     class LlmEndpoint
     {

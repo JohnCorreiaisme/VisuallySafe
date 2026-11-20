@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>The extra, slower checks a deep scan adds on top of the normal ones.</summary>
     static class DeepChecks

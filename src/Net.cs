@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     static class Admin
     {
@@ -42,7 +42,7 @@ namespace TinyGuard
     /// </summary>
     class NetMonitor : IDisposable
     {
-        const string SessionName = "TinyGuard Network";
+        const string SessionName = "VisuallySafe Network";
         static readonly Guid SessionGuid = new Guid("6d3f1a4e-2b7c-4f1e-9a51-3c0b8e7d2f10");
         static readonly Guid TcpIpGuid = new Guid("9a280ac0-c8e0-11d1-84e2-00c04fb998a2");
         static readonly Guid UdpIpGuid = new Guid("bf3a50c5-a9c9-4988-a005-2df0b7c80f80");
@@ -292,7 +292,8 @@ namespace TinyGuard
     /// <summary>Blocks a program's internet access with Windows Firewall rules (needs administrator rights).</summary>
     static class Firewall
     {
-        const string Group = "TinyGuard";
+        const string Group = "VisuallySafe";
+        static bool Ours(string g) { return g == Group || g == "TinyGuard"; }       // rules made before the rename
 
         static dynamic Policy() { return Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2")); }
 
@@ -304,7 +305,7 @@ namespace TinyGuard
                 foreach (dynamic r in Policy().Rules)
                 {
                     string g = r.Grouping, app = r.ApplicationName;
-                    if (g == Group && !string.IsNullOrEmpty(app) && r.Enabled) set.Add(app);
+                    if (Ours(g) && !string.IsNullOrEmpty(app) && r.Enabled) set.Add(app);
                 }
             }
             catch { }
@@ -320,8 +321,8 @@ namespace TinyGuard
                 foreach (int dir in new[] { 2, 1 }) // outbound, inbound
                 {
                     dynamic rule = Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
-                    rule.Name = "TinyGuard block " + (dir == 2 ? "out" : "in") + ": " + path;
-                    rule.Description = "Added by TinyGuard. Unblock it from Visually Safe's Network page.";
+                    rule.Name = "VisuallySafe block " + (dir == 2 ? "out" : "in") + ": " + path;
+                    rule.Description = "Added by Visually Safe. Unblock it from Visually Safe's Network page.";
                     rule.ApplicationName = path;
                     rule.Action = 0;           // block
                     rule.Direction = dir;
@@ -345,7 +346,7 @@ namespace TinyGuard
                 foreach (dynamic r in policy.Rules)
                 {
                     string g = r.Grouping, app = r.ApplicationName;
-                    if (g == Group && string.Equals(app, path, StringComparison.OrdinalIgnoreCase)) names.Add((string)r.Name);
+                    if (Ours(g) && string.Equals(app, path, StringComparison.OrdinalIgnoreCase)) names.Add((string)r.Name);
                 }
                 foreach (string n in names) policy.Rules.Remove(n);
                 return null;

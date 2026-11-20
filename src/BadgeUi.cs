@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>A stepped slider: drag it (or use the arrow keys) to pick one of a list of values.</summary>
     class StepSlider : Painted

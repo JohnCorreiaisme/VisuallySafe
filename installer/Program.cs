@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
-namespace TinyGuardSetup
+namespace VisuallySafeSetup
 {
     static class Program
     {
@@ -34,9 +34,9 @@ namespace TinyGuardSetup
 
     static class Installer
     {
-        public static string Dest { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "TinyGuard"); } }
+        public static string Dest { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VisuallySafe"); } }
         public static string StartMenuLink { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "Visually Safe.lnk"); } }
-        const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\TinyGuard";
+        const string UninstallKey = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\VisuallySafe";
         static readonly string[] ShellRoots = { "*", "Directory", "AllFilesystemObjects", "Drive", "lnkfile", "InternetShortcut" };
 
         public static bool IsAdmin { get { using (var id = WindowsIdentity.GetCurrent()) return new WindowsPrincipal(id).IsInRole(WindowsBuiltInRole.Administrator); } }
@@ -74,14 +74,43 @@ namespace TinyGuardSetup
             return Directory.Exists(p);
         }
 
+        // ---- the program used to be called TinyGuard: its old folder, tasks and entries are removed when the new one is installed
+        public static string LegacyDest { get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "TinyGuard"); } }
+
+        public static void RemoveLegacy(string keepDest)
+        {
+            try { Run("schtasks.exe", "/delete /tn \"TinyGuard\" /f"); Run("schtasks.exe", "/delete /tn \"TinyGuard Watchdog\" /f"); } catch { }
+            try { Registry.LocalMachine.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\TinyGuard", false); } catch { }
+            try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "TinyGuard.lnk")); } catch { }
+            string old = LegacyDest;
+            if (Directory.Exists(old) && !string.Equals(old.TrimEnd((char)92), (keepDest ?? "").TrimEnd((char)92), StringComparison.OrdinalIgnoreCase))
+                for (int i = 0; i < 6; i++)
+                {
+                    try { Directory.Delete(old, true); break; }
+                    catch { CloseRunning(keepDest ?? old); System.Threading.Thread.Sleep(500); }
+                }
+        }
+
+        /// <summary>Carries settings and history over from the old TinyGuard data folder (only when the new one doesn't exist yet).</summary>
+        public static void MigrateData()
+        {
+            try
+            {
+                string root = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string oldD = Path.Combine(root, "TinyGuard"), newD = Path.Combine(root, "VisuallySafe");
+                if (Directory.Exists(oldD) && !Directory.Exists(newD)) Directory.Move(oldD, newD);
+            }
+            catch { }
+        }
+
         public static void CloseRunning(string dest)
         {
-            foreach (string name in new[] { "TinyGuard", "yara64", "yarac64" })       // the program and the scanner tools it starts
+            foreach (string name in new[] { "VisuallySafe", "TinyGuard", "yara64", "yarac64" })       // the program and the scanner tools it starts
                 foreach (var p in Process.GetProcessesByName(name))
                     try
                     {
                         string f = p.MainModule.FileName;
-                        if (!f.StartsWith(dest, StringComparison.OrdinalIgnoreCase)) continue;      // only the copies in the install folder
+                        if (!f.StartsWith(dest, StringComparison.OrdinalIgnoreCase) && !f.StartsWith(LegacyDest, StringComparison.OrdinalIgnoreCase)) continue;      // only the copies in the install folders
                         p.CloseMainWindow();
                         if (!p.WaitForExit(3000)) { p.Kill(); p.WaitForExit(3000); }
                     }
@@ -130,11 +159,14 @@ namespace TinyGuardSetup
                             catch (IOException) when (attempt < 8) { CloseRunning(dest); System.Threading.Thread.Sleep(700); }      // a file still in use: stop what holds it and try again
                         }
                     }
-                string exe = Path.Combine(dest, "TinyGuard.exe");
+                string exe = Path.Combine(dest, "VisuallySafe.exe");
+            MigrateData();
+            try { using (var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true)) if (k != null) k.DeleteValue("TinyGuard", false); } catch { }
+            foreach (string r in ShellRoots) try { Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\" + r + @"\shell\TinyGuardScan", false); } catch { }
                 if (!File.Exists(exe)) throw new Exception("the program file was not unpacked");
-                File.Copy(exe, Path.Combine(dest, "TinyGuard.scr"), true);                  // the screen saver copies
-                File.Copy(exe, Path.Combine(dest, "TinyGuardDefrag.scr"), true);
-                File.Copy(Assembly.GetExecutingAssembly().Location, Path.Combine(dest, "TinyGuardSetup.exe"), true);     // kept so Windows can uninstall it later
+                File.Copy(exe, Path.Combine(dest, "VisuallySafe.scr"), true);                  // the screen saver copies
+                File.Copy(exe, Path.Combine(dest, "VisuallySafeDefrag.scr"), true);
+                File.Copy(Assembly.GetExecutingAssembly().Location, Path.Combine(dest, "VisuallySafeSetup.exe"), true);     // kept so Windows can uninstall it later
                 MakeShortcut(StartMenuLink, exe, dest, "Visually Safe: a helpful antivirus companion");
                 try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms), "TinyGuard.lnk")); } catch { }      // the old name
 
@@ -146,14 +178,15 @@ namespace TinyGuardSetup
                     k.SetValue("Publisher", "Visually Safe");
                     k.SetValue("InstallLocation", dest);
                     k.SetValue("DisplayIcon", exe);
-                    k.SetValue("UninstallString", "\"" + Path.Combine(dest, "TinyGuardSetup.exe") + "\" --uninstall");
+                    k.SetValue("UninstallString", "\"" + Path.Combine(dest, "VisuallySafeSetup.exe") + "\" --uninstall");
                     k.SetValue("NoModify", 1, RegistryValueKind.DWord);
                     k.SetValue("NoRepair", 1, RegistryValueKind.DWord);
                 }
                 // start it when the person logs in, with full rights, without a permission box each time (only when it is the same person who is installing)
                 string me = WindowsIdentity.GetCurrent().Name;
                 if (string.IsNullOrEmpty(user) || string.Equals(user, me, StringComparison.OrdinalIgnoreCase))
-                    Run("schtasks.exe", "/create /tn \"TinyGuard\" /tr \"\\\"" + exe + "\\\"\" /sc onlogon /rl highest /f");
+                    Run("schtasks.exe", "/create /tn \"VisuallySafe\" /tr \"\\\"" + exe + "\\\"\" /sc onlogon /rl highest /f");
+                RemoveLegacy(dest);
                 File.WriteAllText(resultFile, "OK");
                 return 0;
             }
@@ -170,8 +203,9 @@ namespace TinyGuardSetup
             {
                 if (!IsAdmin) throw new Exception("this step needs permission");
                 CloseRunning(dest);
-                Run("schtasks.exe", "/delete /tn \"TinyGuard\" /f");
-                Run("schtasks.exe", "/delete /tn \"TinyGuard Watchdog\" /f");
+                Run("schtasks.exe", "/delete /tn \"VisuallySafe\" /f");
+                Run("schtasks.exe", "/delete /tn \"VisuallySafe Watchdog\" /f");
+                RemoveLegacy(null);
                 try { File.Delete(StartMenuLink); } catch { }
                 try { Registry.LocalMachine.DeleteSubKeyTree(UninstallKey, false); } catch { }
                 // this very program lives in the folder, so the folder is removed a moment after it closes
@@ -190,19 +224,19 @@ namespace TinyGuardSetup
         /// <summary>The parts that belong to the person's own account (they must be done without the extra permission).</summary>
         public static void PersonalSetup(string dest, bool desktopIcon, bool startWithWindows, bool wizard, string name, string email)
         {
-            string exe = Path.Combine(dest, "TinyGuard.exe");
+            string exe = Path.Combine(dest, "VisuallySafe.exe");
             try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TinyGuard.lnk")); } catch { }      // the old name
             if (desktopIcon)
                 try { MakeShortcut(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Visually Safe.lnk"), exe, dest, "Visually Safe"); } catch { }
             try
             {
                 using (var k = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run"))
-                    if (startWithWindows) k.SetValue("TinyGuard", "\"" + exe + "\""); else k.DeleteValue("TinyGuard", false);
+                    if (startWithWindows) k.SetValue("VisuallySafe", "\"" + exe + "\""); else k.DeleteValue("VisuallySafe", false);
             }
             catch { }
             try
             {
-                string data = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TinyGuard");
+                string data = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VisuallySafe");
                 Directory.CreateDirectory(data);
                 // keep anything already set up (mail server and so on); only change what this page asked for
                 string ini = Path.Combine(data, "helper.ini");
@@ -221,8 +255,8 @@ namespace TinyGuardSetup
         {
             try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Visually Safe.lnk")); } catch { }
             try { File.Delete(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "TinyGuard.lnk")); } catch { }
-            try { using (var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true)) if (k != null) k.DeleteValue("TinyGuard", false); } catch { }
-            foreach (string r in ShellRoots) try { Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\" + r + @"\shell\TinyGuardScan", false); } catch { }
+            try { using (var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", true)) if (k != null) k.DeleteValue("VisuallySafe", false); } catch { }
+            foreach (string r in ShellRoots) try { Registry.CurrentUser.DeleteSubKeyTree(@"Software\Classes\" + r + @"\shell\VisuallySafeScan", false); } catch { }
         }
 
         /// <summary>Starts the hidden permission job. Returns null on success, or a short text: "cancelled" or the problem.</summary>
@@ -399,7 +433,7 @@ namespace TinyGuardSetup
 
         void Launch()
         {
-            try { Process.Start(new ProcessStartInfo(Path.Combine(Installer.Dest, "TinyGuard.exe")) { UseShellExecute = true, WorkingDirectory = Installer.Dest }); } catch { }
+            try { Process.Start(new ProcessStartInfo(Path.Combine(Installer.Dest, "VisuallySafe.exe")) { UseShellExecute = true, WorkingDirectory = Installer.Dest }); } catch { }
         }
 
         void Install()

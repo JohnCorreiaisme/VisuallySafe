@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>The Shields page: ransomware shield, web blocklist, malware fingerprint feed and self-protection.</summary>
     class ShieldsView : Panel

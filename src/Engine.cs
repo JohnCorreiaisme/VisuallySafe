@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     enum Verdict { Clean, KnownGood, Unknown, Suspicious, Malicious }
 
@@ -183,7 +183,7 @@ namespace TinyGuard
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.84";
+        public const string Version = "1.0.85";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -254,7 +254,7 @@ namespace TinyGuard
             QuarDir = Path.Combine(dataDir, "Quarantine");
             Directory.CreateDirectory(QuarDir);
             S = Settings.Load(dataDir);
-            Ai = AiModel.TryLoad(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tinyguard.model"));
+            Ai = AiModel.TryLoad(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "visuallysafe.model"));
             Yara = new Yara(AppDomain.CurrentDomain.BaseDirectory, dataDir);
             Rootkit = new RootkitCheck(dataDir) { Hold = () => ScanActive };
             Tools = new NetTools(dataDir);
@@ -866,7 +866,7 @@ namespace TinyGuard
             try
             {
                 string parent = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory.TrimEnd((char)92));
-                if (parent != null && File.Exists(Path.Combine(parent, "TinyGuard.csproj")) && (path.StartsWith(Path.Combine(parent, "bin") + (char)92, StringComparison.OrdinalIgnoreCase) || path.StartsWith(Path.Combine(parent, "bin_new") + (char)92, StringComparison.OrdinalIgnoreCase))) return true;
+                if (parent != null && File.Exists(Path.Combine(parent, "VisuallySafe.csproj")) && (path.StartsWith(Path.Combine(parent, "bin") + (char)92, StringComparison.OrdinalIgnoreCase) || path.StartsWith(Path.Combine(parent, "bin_new") + (char)92, StringComparison.OrdinalIgnoreCase))) return true;
             }
             catch { }
             foreach (string s in S.SafeFolders)
@@ -1532,7 +1532,7 @@ namespace TinyGuard
             {
                 string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).TrimEnd((char)92) + (char)92;
                 if (!path.StartsWith(home, StringComparison.OrdinalIgnoreCase) || File.Exists(path) || Directory.Exists(path)) return;
-                File.WriteAllText(path, PlaceholderMark + id + "\r\nTinyGuard removed this file because it looked dangerous, and keeps the real file locked away.\r\nTo look at it again: right-click this icon and choose \"Scan with Visually Safe\" (or open Visually Safe > Quarantine).\r\n");
+                File.WriteAllText(path, PlaceholderMark + id + "\r\nVisually Safe removed this file because it looked dangerous, and keeps the real file locked away.\r\nTo look at it again: right-click this icon and choose \"Scan with Visually Safe\" (or open Visually Safe > Quarantine).\r\n");
             }
             catch { }
         }

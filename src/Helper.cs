@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Settings for the family helper ("old person's") mode. Kept in helper.ini; the mail password is protected with Windows DPAPI.</summary>
     class HelperConfig

@@ -4,10 +4,10 @@
     <TargetFramework>net48</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>9.0</LangVersion>
-    <AssemblyName>TinyGuard</AssemblyName>
-    <RootNamespace>TinyGuard</RootNamespace>
-    <Version>1.0.84</Version>
-    <ApplicationIcon>TinyGuard.ico</ApplicationIcon>
+    <AssemblyName>VisuallySafe</AssemblyName>
+    <RootNamespace>VisuallySafe</RootNamespace>
+    <Version>1.0.85</Version>
+    <ApplicationIcon>VisuallySafe.ico</ApplicationIcon>
     <Nullable>disable</Nullable>
     <DebugType>none</DebugType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

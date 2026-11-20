@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     class ShieldEvent { public DateTime Time; public string Text = ""; public bool Severe; public override string ToString() { return Time.ToString("MMM d  h:mm tt") + "   " + Text; } }
 
@@ -685,7 +685,7 @@ namespace TinyGuard
         FileSystemWatcher settingsWatch;
         string startupHash = "";
         System.Threading.Timer timer;
-        public const string WatchdogTask = "Visually Safe Watchdog";
+        public const string WatchdogTask = "VisuallySafe Watchdog";
         public SelfGuard(Shields s, Engine e) { sh = s; eng = e; }
 
         static string ExitFlag(string dataDir) { return Path.Combine(dataDir, "user-exit.flag"); }
@@ -810,7 +810,7 @@ namespace TinyGuard
 
         [DllImport("advapi32.dll", SetLastError = true)] static extern bool SetKernelObjectSecurity(IntPtr handle, int info, byte[] sd);
 
-        /// <summary>Stops ordinary programs from ending or injecting into TinyGuard. An administrator can still end it from Task Manager; "Exit" in the tray menu always works.</summary>
+        /// <summary>Stops ordinary programs from ending or injecting into Visually Safe. An administrator can still end it from Task Manager; "Exit" in the tray menu always works.</summary>
         public void ApplyProcessProtection(bool on)
         {
             try

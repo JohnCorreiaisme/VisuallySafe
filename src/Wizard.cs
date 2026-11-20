@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>The wizard's pictures (rendered from the Blender model, packed inside the program). Faces right; the left-facing set is a mirror.</summary>
     static class WizardSprites
@@ -993,7 +993,7 @@ namespace TinyGuard
             try
             {
                 if (eng.S.DefenderSeen == 0) { eng.S.DefenderSeen = DateTime.Now.Ticks; eng.S.Save(); return; }      // first time: what is already in the history is old news
-                var dets = DefenderLink.Detections(new DateTime(eng.S.DefenderSeen)).Where(d => d.Where.IndexOf("TinyGuard", StringComparison.OrdinalIgnoreCase) < 0).ToList();
+                var dets = DefenderLink.Detections(new DateTime(eng.S.DefenderSeen)).Where(d => d.Where.IndexOf("VisuallySafe", StringComparison.OrdinalIgnoreCase) < 0 && d.Where.IndexOf("TinyGuard", StringComparison.OrdinalIgnoreCase) < 0).ToList();
                 var all = DefenderLink.Detections(new DateTime(eng.S.DefenderSeen));
                 if (all.Count > 0) { eng.S.DefenderSeen = all.Max(d => d.When).Ticks; eng.S.Save(); }
                 if (dets.Count == 0) return;
@@ -1061,7 +1061,7 @@ namespace TinyGuard
             }
             catch { }
             return "FACTS ABOUT THIS COMPUTER AND THE TINYGUARD PROGRAM:\n" + BoxesText() + "\n" + Status() + "\n" + worst +
-                "\nTinyGuard also works alongside Microsoft Defender. It checks new programs, the Desktop and Downloads twice a week (Monday and Thursday), and keeps its protection updated by itself.";
+                "\nVisually Safe also works alongside Microsoft Defender. It checks new programs, the Desktop and Downloads twice a week (Monday and Thursday), and keeps its protection updated by itself.";
         }
 
         public static string Answer(string q)

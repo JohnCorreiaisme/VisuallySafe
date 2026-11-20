@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     class Pkg { public string Name = "", Id = "", Version = "", Available = "", Source = ""; }
 

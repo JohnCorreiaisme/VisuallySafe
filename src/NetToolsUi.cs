@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace TinyGuard
+namespace VisuallySafe
 {
     /// <summary>Net tools page: health check, open ports on this PC, device finder, port scanner, ping, traceroute and DNS lookup.</summary>
     class NetToolsView : Panel
