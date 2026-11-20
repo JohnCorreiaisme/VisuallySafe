@@ -2,6 +2,14 @@
 
 **A helpful antivirus companion.** Visually Safe shows you, at a glance, what has been checked and what is safe. Every file and folder gets a clear badge: a green tick when it has been scanned and is safe, yellow when it deserves a look, red when it is dangerous. It sits on top of Microsoft Defender and makes it easy to use, made for people who find computers confusing. A family member or carer can set it up for someone else.
 
+## Watch how it works
+
+<p align="center">
+  <video src="https://github.com/user-attachments/assets/6ed56f0e-c74e-4702-b45c-5d9e0c4787b1" controls width="90%" title="How to use Visually Safe"></video>
+</p>
+
+[Watch the how-to video](https://github.com/user-attachments/assets/6ed56f0e-c74e-4702-b45c-5d9e0c4787b1) if it does not play above.
+
 It works **alongside Microsoft Defender and does not replace it.** It is not made by, endorsed by, or connected to Microsoft.
 
 Works on Windows 10 and Windows 11.
