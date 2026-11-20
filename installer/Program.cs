@@ -449,7 +449,8 @@ namespace VisuallySafeSetup
 
         void Launch()
         {
-            try { Process.Start(new ProcessStartInfo(Path.Combine(Installer.Dest, "VisuallySafe.exe")) { UseShellExecute = true, WorkingDirectory = Installer.Dest }); } catch { }
+            // "the wizard will say hello": the program is told this is the first start, so he introduces himself (only when he is switched on)
+            try { Process.Start(new ProcessStartInfo(Path.Combine(Installer.Dest, "VisuallySafe.exe"), cWizard.Checked ? "--hello" : "") { UseShellExecute = true, WorkingDirectory = Installer.Dest }); } catch { }
         }
 
         void Install()

@@ -717,6 +717,19 @@ namespace VisuallySafe
             if (sync != null) sync.BeginInvoke(new Action(Sync));
         }
 
+        /// <summary>The first start after installing (with "the wizard will say hello" ticked): he introduces himself and says what the boxes mean, once.</summary>
+        public static void Hello()
+        {
+            try
+            {
+                if (Helper.Cfg == null || !Enabled) return;
+                Say("Hello! I am your wizard. I will keep an eye on your computer and tell you what it is doing. Click me any time to ask a question.", false, null);
+                Say(BoxesText(), false, null);
+                Helper.Cfg.IntroDone = true; try { Helper.Cfg.Save(eng.DataDir); } catch { }
+            }
+            catch { }
+        }
+
         public static void Wake()
         {
             if (Helper.Cfg == null) return;

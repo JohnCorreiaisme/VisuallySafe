@@ -14,6 +14,7 @@ namespace VisuallySafe
     /// <summary>Lives in the notification area and owns the engine, the tray icon and the dashboard.</summary>
     class TrayApp : ApplicationContext
     {
+        public static bool HelloOnStart;      // started by the installer with "the wizard will say hello" ticked
         readonly Engine eng;
         readonly NotifyIcon tray = new NotifyIcon();
         readonly MainForm form;
@@ -62,6 +63,12 @@ namespace VisuallySafe
             eng.Threat += r => threats.Enqueue(r);
             if (exitAfterSeconds > 0) exitAt = DateTime.Now.AddSeconds(exitAfterSeconds);
             UpdateCheck.Start(eng, form);
+            if (HelloOnStart)
+            {
+                var hello = new Timer { Interval = 5000 };
+                hello.Tick += (s, e) => { hello.Stop(); hello.Dispose(); Wizard.Hello(); };
+                hello.Start();
+            }
 
             var menu = Menus.Make();
             var open = new ToolStripMenuItem("Open Visually Safe", null, (s, e) => ShowForm(0));
@@ -1112,6 +1119,7 @@ namespace VisuallySafe
                 }
                 if (cfgArg) { page = 9; }
                 bool show = engine.S.FirstRun || Array.IndexOf(args, "--show") >= 0 || waitPid != null || cfgArg;
+                TrayApp.HelloOnStart = Array.IndexOf(args, "--hello") >= 0;
                 Application.Run(new TrayApp(engine, show && exitAfter == 0, exitAfter, page));
             }
             return 0;
