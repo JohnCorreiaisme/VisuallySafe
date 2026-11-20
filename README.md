@@ -20,6 +20,14 @@ Works on Windows 10 and Windows 11.
 - **Optional helper wizard** (can be turned off): ask anything, by typing or speaking. Answers come from an AI you choose that runs on your own PC (LM Studio, Ollama and similar), so nothing is sent to a company.
 - **Extra checks of its own**: file fingerprints against public lists, YARA rules, and a small on-device model. These are a second opinion, not a replacement for Windows' protection.
 
+## Updates
+
+From version 1.0.90 on, Visually Safe checks GitHub for a newer release every few hours. If there is one, it downloads the installer, checks it against the fingerprint (SHA-256) published with the release, and shows a big "A new version is ready" window. Nothing is installed until you click **Update now** and say Yes to the Windows permission box. Your settings and history are kept. Turn it off, or check right away, from the tray menu: *Update automatically* and *Check for updates now*.
+
+## Who answers the wizard
+
+On the AI helper page, **The wizard answers using** lets you choose: Automatic (a local AI such as LM Studio or Ollama if one is running, otherwise his built-in answers), your local AI, **Claude Code**, or **Codex**. Claude Code and Codex are run only to answer in words: no tools and no file access.
+
 ## Install
 
 Run **VisuallySafeSetup** and follow the pages. It explains the Windows permission box before it appears, asks who the wizard is for (so a family member can set it up for someone else), and puts Visually Safe in Program Files with a Start menu entry. Remove it later from Windows Settings, then Apps. Your settings are kept.
@@ -305,7 +313,7 @@ Tray > "Family helper mode...". For a relative's computer. Turning it on also tu
 ## 1.0.13
 - AI helper page: fixed two text lines that were stretched far too wide and covered the top of the Copy prompt / Paste reply buttons.
 
-## 1.0.14: AI update (tray > "Update Visually Safe with AI...", or the button on the AI helper page)
+## 1.0.14: AI update (retired in 1.0.90: Visually Safe now updates itself from GitHub; see below)
 An AI agent is told what Visually Safe does (this README and the list of source files) and asked whether Visually Safe needs more as an antivirus; if so it makes up to three small changes. Steps: make a working copy of the source, ask Claude Code or Codex (or copy the prompt for any other AI), then "Check and build".
 - The agent works only on the copy: Claude Code gets no command line (Read/Write/Edit/Glob/Grep only), Codex runs in a workspace-only sandbox.
 - Visually Safe then lists what changed, warns about new web addresses, new process/registry/download code, and large deletions, builds it, and runs the new program's self-test (a blocked file is caught, a script dropper is flagged, a harmless script and 30 normal Windows programs are not).

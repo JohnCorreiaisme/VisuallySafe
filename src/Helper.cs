@@ -23,6 +23,7 @@ namespace VisuallySafe
         public long SleepUntil;      // the wizard is asleep (silent and hidden) until this moment
         public string Name = "your kid", Email = "", Smtp = "", User = "", Pass = "", Server = "";
         public int Port = 587;
+        public string Brain = "auto";      // what the wizard answers with: auto, local, claude or codex
 
         static string FileOf(string dir) { return Path.Combine(dir, "helper.ini"); }
 
@@ -49,6 +50,7 @@ namespace VisuallySafe
                         case "user": c.User = v.Trim(); break;
                         case "pass": try { c.Pass = Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(v), null, DataProtectionScope.CurrentUser)); } catch { } break;
                         case "server": c.Server = v.Trim(); break;
+                        case "brain": if (v == "local" || v == "claude" || v == "codex") c.Brain = v; break;
                     }
                 }
             }
@@ -61,7 +63,7 @@ namespace VisuallySafe
         {
             string pw = "";
             try { if (Pass.Length > 0) pw = Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(Pass), null, DataProtectionScope.CurrentUser)); } catch { }
-            File.WriteAllLines(FileOf(dir), new[] { "on=" + (On ? "1" : "0"), "wizard=" + (Wizard ? "1" : "0"), "sleepUntil=" + SleepUntil, "autoCheck=" + (AutoCheck ? "1" : "0"), "intro=" + (IntroDone ? "1" : "0"), "name=" + Name, "email=" + Email, "smtp=" + Smtp, "port=" + Port, "user=" + User, "pass=" + pw, "server=" + Server });
+            File.WriteAllLines(FileOf(dir), new[] { "brain=" + Brain, "on=" + (On ? "1" : "0"), "wizard=" + (Wizard ? "1" : "0"), "sleepUntil=" + SleepUntil, "autoCheck=" + (AutoCheck ? "1" : "0"), "intro=" + (IntroDone ? "1" : "0"), "name=" + Name, "email=" + Email, "smtp=" + Smtp, "port=" + Port, "user=" + User, "pass=" + pw, "server=" + Server });
         }
 
         public bool MailReady { get { return Email.Length > 3 && Smtp.Length > 0; } }

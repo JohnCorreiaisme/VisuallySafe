@@ -68,15 +68,32 @@ namespace VisuallySafe
         readonly Engine eng;
         readonly AgentCard cClaude = new AgentCard { Name = "Claude Code" }, cCodex = new AgentCard { Name = "Codex" };
         readonly Btn bClaude = new Btn("Fix with Claude Code", true), bCodex = new Btn("Fix with Codex", true);
-        readonly Btn bCopy = new Btn("Copy prompt for any AI"), bPaste = new Btn("Paste the AI's reply"), bUpdate = new Btn("Update Visually Safe with AI");
+        readonly Btn bCopy = new Btn("Copy prompt for any AI"), bPaste = new Btn("Paste the AI's reply");
         readonly Btn bApply = new Btn("Apply approved", true), bClear = new Btn("Clear ticks");
         readonly Label status, listTitle, hint;
         readonly TextBox reply = new TextBox { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BackColor = Theme.Card, ForeColor = Theme.Text, BorderStyle = BorderStyle.None };
         readonly DarkList list = new DarkList(52);
         readonly System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer { Interval = 500 };
 
+        readonly Label lBrain = new Label(); readonly ComboBox cBrain = new ComboBox(); bool syncingBrain;
+        static readonly string[] BrainIds = { "auto", "local", "claude", "codex" };
         readonly WizardLanding landing; readonly Btn bTools, bWiz; CheckBox cWizStart; bool syncingWizBox;
-        void ShowTools(bool on) { landing.Visible = bTools.Visible = cWizStart.Visible = !on; bWiz.Visible = on; if (!on) { landing.BringToFront(); cWizStart.BringToFront(); bTools.BringToFront(); } }
+        void FillBrain(bool detected)
+        {
+            if (Helper.Cfg == null) return;
+            syncingBrain = true;
+            try
+            {
+                bool hc = true, hx = true;
+                if (detected) { var ag = Agents.Detect(); hc = ag.Any(a => a.Id == "claude" && a.Found); hx = ag.Any(a => a.Id == "codex" && a.Found); }
+                cBrain.Items.Clear();
+                cBrain.Items.AddRange(new object[] { "Automatic (a local AI if one is running)", "My local AI (LM Studio, Ollama and so on)", "Claude Code" + (hc ? "" : "  (not found on this PC)"), "Codex" + (hx ? "" : "  (not found on this PC)") });
+                cBrain.SelectedIndex = Math.Max(0, Array.IndexOf(BrainIds, Helper.Cfg.Brain));
+            }
+            finally { syncingBrain = false; }
+        }
+
+        void ShowTools(bool on) { landing.Visible = bTools.Visible = cWizStart.Visible = lBrain.Visible = cBrain.Visible = !on; bWiz.Visible = on; if (!on) { landing.BringToFront(); cWizStart.BringToFront(); bTools.BringToFront(); } }
 
         AssistantContext ctx;
         List<ProposedAction> actions = new List<ProposedAction>();
@@ -125,11 +142,9 @@ namespace VisuallySafe
             list.KeyDown += (s, e) => { if (e.KeyCode == Keys.Space && list.SelectedIndex >= 0) { Toggle(list.SelectedIndex); e.Handled = true; } };
 
             Controls.AddRange(new Control[] { cClaude, cCodex, bClaude, bCodex, hint, bCopy, bPaste, status, reply, listTitle, list, bApply, bClear });
-            bUpdate.Bounds = new Rectangle(412, 14, 230, 34); Controls.Add(bUpdate);
-            bUpdate.Click += (s, e) => { var f = new SelfUpdateForm(eng); f.Show(); f.Activate(); };
             bCopy.BringToFront(); bPaste.BringToFront();    // nothing may sit on top of these two
             // the big wizard button covers the fix-it tools until you ask for them
-            landing = new WizardLanding { Bounds = new Rectangle(28, 84, 614, 360) };
+            landing = new WizardLanding { Bounds = new Rectangle(28, 84, 614, 322) };
             cWizStart = new CheckBox { Text = "Show the wizard when Visually Safe starts", Bounds = new Rectangle(28, 452, 614, 28), ForeColor = Theme.Text, BackColor = Theme.Bg, Font = new Font("Segoe UI", 11f), Cursor = Cursors.Hand };
             cWizStart.CheckedChanged += (s, e) =>
             {
@@ -138,6 +153,17 @@ namespace VisuallySafe
                 try { Helper.Cfg.Save(eng.DataDir); } catch { }
                 Wizard.Sync();
             };
+            // what the wizard answers with
+            lBrain.Text = "The wizard answers using:"; lBrain.ForeColor = Theme.Text; lBrain.BackColor = Theme.Bg; lBrain.Font = new Font("Segoe UI Semibold", 11f); lBrain.Bounds = new Rectangle(28, 414, 220, 30); lBrain.TextAlign = ContentAlignment.MiddleLeft;
+            cBrain.DropDownStyle = ComboBoxStyle.DropDownList; cBrain.FlatStyle = FlatStyle.Flat; cBrain.BackColor = Theme.Card; cBrain.ForeColor = Theme.Text; cBrain.Font = new Font("Segoe UI", 11f); cBrain.Bounds = new Rectangle(252, 414, 390, 30);
+            cBrain.SelectedIndexChanged += (s, e) =>
+            {
+                if (syncingBrain || Helper.Cfg == null || cBrain.SelectedIndex < 0) return;
+                Helper.Cfg.Brain = BrainIds[cBrain.SelectedIndex];
+                try { Helper.Cfg.Save(eng.DataDir); } catch { }
+            };
+            Controls.Add(lBrain); Controls.Add(cBrain);
+            VisibleChanged += (s, e) => { if (Visible) FillBrain(false); if (Visible) System.Threading.Tasks.Task.Run(() => Agents.Detect()).ContinueWith(t => { try { BeginInvoke(new Action(() => FillBrain(true))); } catch { } }); };
             VisibleChanged += (s, e) => { if (Visible && Helper.Cfg != null) { syncingWizBox = true; cWizStart.Checked = Helper.Cfg.Wizard; syncingWizBox = false; } };
             landing.Pressed += () => Wizard.Summon();
             bTools = new Btn("Fix problems with Claude Code or Codex   ▸") { Bounds = new Rectangle(28, 486, 614, 48) };

@@ -25,6 +25,7 @@ namespace VisuallySafeSetup
             if (args.Length >= 3 && args[0] == "--uninstall-files") return Installer.UninstallFiles(args[1], args[2]);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            if (args.Length >= 1 && args[0] == "--update") return Installer.UpdateRun();
             if (args.Length >= 1 && args[0] == "--uninstall") { Application.Run(new UninstallForm()); return 0; }
             if (args.Length >= 2 && args[0] == "--shots") { var f = new SetupForm(); f.Snap(args[1]); return 0; }
             Application.Run(new SetupForm());
@@ -260,6 +261,21 @@ namespace VisuallySafeSetup
         }
 
         /// <summary>Starts the hidden permission job. Returns null on success, or a short text: "cancelled" or the problem.</summary>
+        /// <summary>The automatic update: no pages, just the Windows permission box, then the new version starts.</summary>
+        public static int UpdateRun()
+        {
+            string resultFile = Path.Combine(Path.GetTempPath(), "visuallysafe-update-" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt");
+            string me = WindowsIdentity.GetCurrent().Name;
+            string err = RunWithPermission("--install-files " + (char)34 + Dest + (char)34 + " " + (char)34 + resultFile + (char)34 + " " + (char)34 + me + (char)34, resultFile);
+            if (err == null)
+            {
+                try { Process.Start(new ProcessStartInfo(Path.Combine(Dest, "VisuallySafe.exe")) { UseShellExecute = true, WorkingDirectory = Dest }); } catch { }
+                return 0;
+            }
+            if (err != "cancelled") MessageBox.Show("The update could not finish (" + err + "). Nothing was changed, and your current version still works.", "Visually Safe update");
+            return 1;
+        }
+
         public static string RunWithPermission(string verbArgs, string resultFile)
         {
             try

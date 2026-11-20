@@ -1081,22 +1081,40 @@ namespace VisuallySafe
                 "\nVisually Safe also works alongside Microsoft Defender. It checks new programs, the Desktop and Downloads twice a week (Monday and Thursday), and keeps its protection updated by itself.";
         }
 
+        static string SystemPrompt(string helpText)
+        {
+            return "You are a kind, patient old wizard who lives on the screen of an elderly person's computer and helps them stay safe. " +
+                        (helpText != null ? "Explain the steps you are given clearly, one step at a time, in plain everyday words and no markdown. " : "Answer in at most three short, simple sentences, in plain everyday words, with no jargon, no lists and no markdown. ") +
+                        "Never tell them to type commands, change settings or delete files. If you are not sure, or it sounds dangerous, tell them to ask " + Who + " or press the I need help button. " +
+                        "Use these facts when they are relevant and never contradict them.\n" + Facts() + (helpText != null ? "\nSTEPS TO EXPLAIN (keep every step, in order):\n" + helpText : "");
+        }
+
         public static string Answer(string q)
         {
             string ql = q.ToLowerInvariant();
             if (Regex.IsMatch(ql, @"\b(virus|infect\w*|hacked|protected|am i safe|is my (computer|pc) (safe|ok|okay))\b")) { int lv; bool fx; return HealthText(out lv, out fx); }
             var topic = WizardHelp.Find(q);
             string helpText = topic != null ? topic.Text.Replace("{who}", Who) : null;
+            string brain = Helper.Cfg != null ? Helper.Cfg.Brain : "auto";
+            if (brain == "claude" || brain == "codex")
+            {
+                // answers from Claude Code or Codex on this PC (they are asked to answer only: no tools, read-only)
+                try
+                {
+                    string a = AgentChat.Ask(brain, SystemPrompt(helpText), q, 120);
+                    a = Regex.Replace(a, @"[*#`_]+", "").Trim();
+                    if (a.Length > 0) return a;
+                }
+                catch { }
+            }
+            if (brain != "local" && brain != "auto" && brain != "claude" && brain != "codex") brain = "auto";
             try
             {
                 var ep = Llm.Preferred;
                 if (ep == null) { var scan = Llm.Discover(); ep = scan.Models.FirstOrDefault(); Llm.Preferred = ep; }
                 if (ep != null)
                 {
-                    string sys = "You are a kind, patient old wizard who lives on the screen of an elderly person's computer and helps them stay safe. " +
-                        (helpText != null ? "Explain the steps you are given clearly, one step at a time, in plain everyday words and no markdown. " : "Answer in at most three short, simple sentences, in plain everyday words, with no jargon, no lists and no markdown. ") +
-                        "Never tell them to type commands, change settings or delete files. If you are not sure, or it sounds dangerous, tell them to ask " + Who + " or press the I need help button. " +
-                        "Use these facts when they are relevant and never contradict them.\n" + Facts() + (helpText != null ? "\nSTEPS TO EXPLAIN (keep every step, in order):\n" + helpText : "");
+                    string sys = SystemPrompt(helpText);
                     using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60)))
                     {
                         string a = Llm.StripThinking(Llm.Chat(ep, sys, q, cts.Token));

@@ -42,7 +42,7 @@ namespace VisuallySafe
 
     class Settings
     {
-        public bool Enabled = true, Cloud = true, AutoQuarantine = true;
+        public bool Enabled = true, Cloud = true, AutoQuarantine = true, AutoUpdate = true;
         public string MbKey = "";
         public long RulesChecked;
         public bool ScreensaverIdle, SystemSaver, SaverDefrag = true, ScanGlow = true;
@@ -103,6 +103,7 @@ namespace VisuallySafe
                 {
                     case "enabled": s.Enabled = v == "1"; break;
                     case "cloud": s.Cloud = v == "1"; break;
+                    case "autoUpdate": s.AutoUpdate = v != "0"; break;
                     case "autoQuarantine": s.AutoQuarantine = v == "1"; break;
                     case "mbKey": s.MbKey = Unprotect(v); break;
                     case "folders": s.Folders = Split(v); break;
@@ -141,6 +142,7 @@ namespace VisuallySafe
             {
                 "enabled=" + (Enabled ? "1" : "0"),
                 "cloud=" + (Cloud ? "1" : "0"),
+                "autoUpdate=" + (AutoUpdate ? "1" : "0"),
                 "autoQuarantine=" + (AutoQuarantine ? "1" : "0"),
                 "mbKey=" + Protect(MbKey),
                 "folders=" + string.Join("|", Folders),
@@ -183,7 +185,7 @@ namespace VisuallySafe
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.89";
+        public const string Version = "1.0.90";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 

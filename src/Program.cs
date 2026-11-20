@@ -22,7 +22,19 @@ namespace VisuallySafe
         readonly ConcurrentQueue<ScanRecord> threats = new ConcurrentQueue<ScanRecord>();
         readonly ToolStripMenuItem mOn, mResume, mStartup;
         GuardState shown = (GuardState)(-1);
-        DateTime exitAt = DateTime.MaxValue, lastNet = DateTime.MinValue, lastIdle = DateTime.MinValue;
+        DateTime exitAt = DateTime.MaxValue, lastNet = DateTime.MinValue, lastIdle = DateTime.MinValue, lastTrim = DateTime.Now.AddMinutes(-2.25);     // the first trim comes about 45 seconds after start-up
+        [System.Runtime.InteropServices.DllImport("psapi.dll")] static extern bool EmptyWorkingSet(IntPtr process);
+        /// <summary>Gives memory the program isn't using back to Windows: a tray program should stay small while it sits idle.</summary>
+        static void TrimMemory()
+        {
+            try
+            {
+                System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true); GC.WaitForPendingFinalizers();
+                EmptyWorkingSet(Process.GetCurrentProcess().Handle);
+            }
+            catch { }
+        }
 
         /// <summary>Restart Visually Safe as administrator (Windows shows its permission prompt once).</summary>
         void Elevate()
@@ -49,6 +61,7 @@ namespace VisuallySafe
             form.DefragSaverRequested += () => ScreenSaver.Start(eng, null, "defrag");
             eng.Threat += r => threats.Enqueue(r);
             if (exitAfterSeconds > 0) exitAt = DateTime.Now.AddSeconds(exitAfterSeconds);
+            UpdateCheck.Start(eng, form);
 
             var menu = Menus.Make();
             var open = new ToolStripMenuItem("Open Visually Safe", null, (s, e) => ShowForm(0));
@@ -71,7 +84,8 @@ namespace VisuallySafe
                 new ToolStripMenuItem("Start defrag screen saver now", null, (s, e) => ScreenSaver.Start(eng, null, "defrag")),
                 (mGlow = new ToolStripMenuItem("Light up icons while scanning", null, (s, e) => { eng.S.ScanGlow = !eng.S.ScanGlow; eng.S.Save(); })),
                 (mShell = new ToolStripMenuItem("\"Scan with Visually Safe\" in right-click menu", null, (s, e) => ShellMenu.Toggle(eng))),
-                new ToolStripMenuItem("Update Visually Safe with AI…", null, (s, e) => { var f = new SelfUpdateForm(eng); f.Show(); f.Activate(); }),
+                (mUpd = new ToolStripMenuItem("Update automatically", null, (s, e) => { eng.S.AutoUpdate = !eng.S.AutoUpdate; eng.S.Save(); })),
+                new ToolStripMenuItem("Check for updates now", null, (s, e) => UpdateCheck.CheckNow()),
                 new ToolStripMenuItem("Microsoft Defender: status", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.StatusText()).ContinueWith(t => tray.ShowBalloonTip(9000, "Microsoft Defender", t.Result, ToolTipIcon.Info))),
                 new ToolStripMenuItem("Microsoft Defender: update definitions now", null, (s, e) => System.Threading.Tasks.Task.Run(() => DefenderLink.UpdateSignatures()).ContinueWith(t => tray.ShowBalloonTip(6000, "Microsoft Defender", t.Result != null ? "Definitions are up to date." : "Could not update them just now.", ToolTipIcon.Info))),
                 new ToolStripMenuItem("Wake the wizard", null, (s, e) => Wizard.Wake()),
@@ -87,7 +101,7 @@ namespace VisuallySafe
                 mResume.Visible = eng.S.Enabled && !eng.Active;
                 pause.Enabled = eng.S.Enabled;
                 mStartup.Checked = Startup.Get();
-                mGlow.Checked = eng.S.ScanGlow; mShell.Checked = ShellMenu.Wanted(eng);
+                mGlow.Checked = eng.S.ScanGlow; mShell.Checked = ShellMenu.Wanted(eng); mUpd.Checked = eng.S.AutoUpdate;
             };
 
             tray.ContextMenuStrip = menu;
@@ -162,6 +176,7 @@ namespace VisuallySafe
             UpdateTray();
             if (form.Visible) form.RefreshAll();
             if ((DateTime.Now - lastNet).TotalMilliseconds >= 950) { lastNet = DateTime.Now; form.RefreshNetwork(); }
+            if ((DateTime.Now - lastTrim).TotalMinutes >= 3 && !eng.ScanActive && !form.Visible) { lastTrim = DateTime.Now; System.Threading.Tasks.Task.Run(() => TrimMemory()); }
             if ((DateTime.Now - lastIdle).TotalSeconds >= 2) { lastIdle = DateTime.Now; try { eng.Shield.Tick(); } catch { } try { CheckIdle(); } catch { } try { SelfUpdate.TrialTick(eng, startedAt); } catch { } }
             if ((DateTime.Now - lastPersist).TotalMinutes >= 10 && !eng.ScanActive) { lastPersist = DateTime.Now; System.Threading.Tasks.Task.Run(() => { try { Persistence.Check(eng, true); } catch { } }); }
             if (DateTime.Now >= exitAt) Quit();
@@ -187,7 +202,7 @@ namespace VisuallySafe
             form.Activate();
         }
 
-        ToolStripMenuItem mGlow, mShell;
+        ToolStripMenuItem mGlow, mShell, mUpd;
         HotKeyWindow hot;
 
         /// <summary>Scans every file and folder selected on the Desktop or in open Explorer windows (any number).</summary>
@@ -1046,6 +1061,16 @@ namespace VisuallySafe
             string a0 = args.Length > 0 ? args[0].ToLowerInvariant() : "";
             if (a0.StartsWith("/p") || a0.StartsWith("-p")) return 0;
             bool saverArg = a0.StartsWith("/s") || a0.StartsWith("-s") || a0 == "--saver", cfgArg = a0.StartsWith("/c") || a0.StartsWith("-c");
+            int askAgent = Array.IndexOf(args, "--ask-agent");
+            if (askAgent >= 0 && args.Length > askAgent + 2)
+            {
+                string res; try { res = AgentChat.Ask(args[askAgent + 1], "You are a kind old wizard helping an elderly person. Answer in two short sentences.", "How do I make the text on my screen bigger?", 120); } catch (Exception ex) { res = "ERROR: " + ex.Message; }
+                File.WriteAllText(args[askAgent + 2], res); return 0;
+            }
+            string updTest = Arg(args, "--update-check-test");
+            if (updTest != null) { try { UpdateCheck.Test(updTest); } catch (Exception ex) { File.WriteAllText(updTest, "ERROR " + ex.Message); } return 0; }
+            string updShot = Arg(args, "--update-shot");
+            if (updShot != null) { UpdatePrompt.Snap(updShot); return 0; }
             string askShot = Arg(args, "--ask-shot");
             if (askShot != null) { WizardAsk.Snap(askShot); return 0; }
             string popupShot = Arg(args, "--popup-shot");
