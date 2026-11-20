@@ -23,7 +23,7 @@ Run **VisuallySafeSetup** and follow the pages. It explains the Windows permissi
 
 Windows may show "Windows protected your PC" because the installer is new and not yet signed: click *More info*, then *Run anyway*.
 
-Build the installer yourself with `python tools/build_setup.py` (needs the .NET SDK). It writes `dist/TinyGuardSetup-<version>.exe`.
+Build the installer yourself with `python tools/build_setup.py` (needs the .NET SDK). It writes `dist/VisuallySafeSetup-<version>.exe`.
 
 ## Support
 
@@ -65,11 +65,11 @@ When a program, script, macro document, shortcut or archive lands in a watched f
    MalwareBazaar (only if you add a free key), CIRCL hashlookup -> Malware or Known good.
 4. Nobody knows it: the YARA engine (`bin\yara\yara64.exe`, VirusTotal YARA 4.6.0) checks it
    against the YARA-Forge "core" rule set (`bin\yara\core.yar`, ~5,000 rules) plus your own
-   rules in `%LOCALAPPDATA%\Visually Safe\rules\*.yar`. A rule with `score` 80+ in its meta means
+   rules in `%LOCALAPPDATA%\TinyGuard\rules\*.yar`. A rule with `score` 80+ in its meta means
    Malware (quarantined); lower means Suspicious. Works on scripts too.
    Rule updates: once a day (first check 2 minutes after start, only while "Check files online"
    is on) Visually Safe asks GitHub for the newest YARA-Forge release. A newer core set is
-   downloaded, test-compiled, and only then swapped in as `%LOCALAPPDATA%\Visually Safe\core.yar`
+   downloaded, test-compiled, and only then swapped in as `%LOCALAPPDATA%\TinyGuard\core.yar`
    (it wins over the bundled copy). Settings shows the rules version and has an "Update rules" button.
 5. Still nobody knows it, and it is a program: the offline AI model (`bin\tinyguard.model`, 1.4 MB)
    scores it. 90% or more marks it Suspicious; lower scores are shown in Activity.
@@ -231,7 +231,7 @@ A kernel rootkit can fool all of it, so the page also has a **Defender Offline s
 
 ## Files
 
-Everything lives in `%LOCALAPPDATA%\Visually Safe`: `settings.ini`, `history.tsv`, `cache.tsv`,
+Everything lives in `%LOCALAPPDATA%\TinyGuard`: `settings.ini`, `history.tsv`, `cache.tsv`,
 `programs.tsv`, `quarantine.tsv`, `Quarantine\`, `rules\`, and two lists you can edit by hand,
 one SHA-256 per line: `blocklist.txt` and `allowlist.txt`.
 
@@ -307,7 +307,7 @@ An AI agent is told what Visually Safe does (this README and the list of source 
 - The agent works only on the copy: Claude Code gets no command line (Read/Write/Edit/Glob/Grep only), Codex runs in a workspace-only sandbox.
 - Visually Safe then lists what changed, warns about new web addresses, new process/registry/download code, and large deletions, builds it, and runs the new program's self-test (a blocked file is caught, a script dropper is flagged, a harmless script and 30 normal Windows programs are not).
 - `src/SelfUpdate.cs` and `src/SelfUpdateUi.cs` are protected: an update that changes them is refused.
-- Nothing is installed until you click Install. The old source is saved in `%LOCALAPPDATA%\Visually Safe\update\backup`, the old program is kept as `TinyGuard.exe.old`, and a hidden watcher puts it back if the new version isn't confirmed healthy after two minutes. The source is updated in the project folder but not committed to git (review with `git diff`).
+- Nothing is installed until you click Install. The old source is saved in `%LOCALAPPDATA%\TinyGuard\update\backup`, the old program is kept as `TinyGuard.exe.old`, and a hidden watcher puts it back if the new version isn't confirmed healthy after two minutes. The source is updated in the project folder but not committed to git (review with `git diff`).
 - Needs the source folder (TinyGuard.csproj) next to the program and the .NET SDK. The self-test and reading the summary are a safety net, not proof: read what it changed.
 - Also fixed: the Family helper window was not scaling on high-DPI screens.
 
