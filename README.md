@@ -4,11 +4,9 @@
 
 ## Watch how it works
 
-<p align="center">
-  <video src="https://github.com/user-attachments/assets/6ed56f0e-c74e-4702-b45c-5d9e0c4787b1" controls width="90%" title="How to use Visually Safe"></video>
-</p>
+[![Watch the how-to video: Visually Safe, step by step](docs/how-to-frame.png)](docs/how-to-use.mp4)
 
-[Watch the how-to video](https://github.com/user-attachments/assets/6ed56f0e-c74e-4702-b45c-5d9e0c4787b1) if it does not play above.
+*Click the picture to watch the 2 and a half minute how-to video.*
 
 It works **alongside Microsoft Defender and does not replace it.** It is not made by, endorsed by, or connected to Microsoft.
 
