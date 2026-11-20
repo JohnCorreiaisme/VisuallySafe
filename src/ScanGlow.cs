@@ -614,8 +614,8 @@ namespace VisuallySafe
                     if (done)
                     {
                         // steady coloured box round the icon with a small badge on its corner
-                        int kind = result.HasValue && result.Value >= Verdict.Malicious ? 2 : result.HasValue && result.Value == Verdict.Suspicious ? 1 : 0;
-                        Color c = kind == 2 ? Color.FromArgb(235, 60, 60) : kind == 1 ? Color.FromArgb(245, 190, 30) : Color.FromArgb(46, 190, 100);
+                        int kind = result.HasValue && result.Value >= Verdict.Malicious ? 2 : result.HasValue && result.Value == Verdict.Suspicious ? 1 : result.HasValue && result.Value == Verdict.Unknown ? 3 : 0;     // 3: checked, but nothing is known about it: grey, not a green "safe" tick
+                        Color c = kind == 2 ? Color.FromArgb(235, 60, 60) : kind == 1 ? Color.FromArgb(245, 190, 30) : kind == 3 ? Color.FromArgb(135, 145, 165) : Color.FromArgb(46, 190, 100);
                         double pop = Math.Min(1.0, (now - resultAt).TotalMilliseconds / 260.0);
                         pop = 1 - Math.Pow(1 - pop, 3);
                         using (var pen = new Pen(Color.FromArgb(70, c), 9f) { LineJoin = LineJoin.Round }) using (var path = Theme.Round(box, 8)) g.DrawPath(pen, path);
@@ -633,6 +633,7 @@ namespace VisuallySafe
                         {
                             if (kind == 0) g.DrawLines(pen, new[] { new PointF(cx - 3.2f * u, cy + 0.2f * u), new PointF(cx - 1f * u, cy + 2.6f * u), new PointF(cx + 3.4f * u, cy - 2.6f * u) });
                             else if (kind == 1) { g.DrawLine(pen, cx, cy - 3.2f * u, cx, cy + 0.8f * u); using (var ib = new SolidBrush(ink)) g.FillEllipse(ib, cx - 0.75f * u, cy + 2.2f * u, 1.5f * u, 1.5f * u); }
+                            else if (kind == 3) { using (var qf = new Font("Segoe UI Semibold", Math.Max(8f, bs * 0.5f), GraphicsUnit.Pixel)) using (var qb = new SolidBrush(ink)) { var qs = g.MeasureString("?", qf); g.DrawString("?", qf, qb, cx - qs.Width / 2f, cy - qs.Height / 2f); } }
                             else { g.DrawLine(pen, cx - 2.8f * u, cy - 2.8f * u, cx + 2.8f * u, cy + 2.8f * u); g.DrawLine(pen, cx + 2.8f * u, cy - 2.8f * u, cx - 2.8f * u, cy + 2.8f * u); }
                         }
                     }

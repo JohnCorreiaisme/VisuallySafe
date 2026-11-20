@@ -8,7 +8,7 @@ Works on Windows 10 and Windows 11.
 
 ## What it does
 
-- **Boxes on your icons**: a swirling ring while a file is checked, then a green tick, yellow "!" or red box. You can see at a glance what is safe.
+- **Boxes on your icons**: a swirling ring while a file is checked, then a green tick (checked and known to be safe), a grey "?" (checked, but nothing is known about it), a yellow "!" or a red cross. You can see at a glance what is safe.
 - **Scan map**: every folder drawn as a node, so you can see what has been scanned, what has not, and where anything was flagged.
 - **"Is my computer okay?"**: a green, yellow or red answer taken from Windows' own protection status. A *Fix it* button updates Windows' protection and starts a Windows scan.
 - **Plain-words reports**: scans starting and finishing, and anything Windows or Visually Safe finds, in everyday words. The family member can get an email.

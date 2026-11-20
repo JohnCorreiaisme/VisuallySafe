@@ -183,7 +183,7 @@ namespace VisuallySafe
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.85";
+        public const string Version = "1.0.86";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -364,7 +364,7 @@ namespace VisuallySafe
                 if (ledgerDirty && (DateTime.Now - ledgerSaved).TotalSeconds > 30) SaveLedger();
                 // Look for new YARA rules once a day, only while online checks are allowed.
                 if (S.Cloud && DateTime.Now >= nextRulesCheck && !Yara.Updating
-                    && (DateTime.Now - new DateTime(S.RulesChecked)).TotalHours >= 24)
+                    && ((DateTime.Now - new DateTime(S.RulesChecked)).TotalHours >= 24 || !Yara.HasCore))
                 {
                     nextRulesCheck = DateTime.Now.AddHours(1); // if this attempt fails, retry in an hour
                     CheckRulesNow();

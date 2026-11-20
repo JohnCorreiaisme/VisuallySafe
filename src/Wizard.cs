@@ -904,7 +904,7 @@ namespace VisuallySafe
 
         public static string BoxesText()
         {
-            return "The boxes around your icons are my notes. A blue glow that swirls, with a number, means I am checking it right now. A green box with a tick means I checked it and it is safe. A yellow box with an exclamation mark means it looks a little odd, so please do not open it yet. A red box means danger. Do not open it, and tell " + Who + ".";
+            return "The boxes around your icons are my notes. A blue glow that swirls, with a number, means I am checking it right now. A green box with a tick means I checked it and it is safe. A yellow box with an exclamation mark means it looks a little odd, so please do not open it yet. A grey box with a question mark means I checked it but know nothing about it, so it is not marked safe. A red box means danger. Do not open it, and tell " + Who + ".";
         }
 
         /// <summary>One honest answer to "is my computer okay?": level 0 green, 1 yellow, 2 red.</summary>

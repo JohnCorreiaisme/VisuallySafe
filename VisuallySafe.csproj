@@ -6,7 +6,7 @@
     <LangVersion>9.0</LangVersion>
     <AssemblyName>VisuallySafe</AssemblyName>
     <RootNamespace>VisuallySafe</RootNamespace>
-    <Version>1.0.85</Version>
+    <Version>1.0.86</Version>
     <ApplicationIcon>VisuallySafe.ico</ApplicationIcon>
     <Nullable>disable</Nullable>
     <DebugType>none</DebugType>

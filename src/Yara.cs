@@ -30,6 +30,7 @@ namespace VisuallySafe
         volatile bool updating;
         public bool Updating { get { return updating; } }
         public bool Ready { get; private set; }
+        public bool HasCore { get { return File.Exists(core); } }
         public string Status { get; private set; }
 
         public Yara(string binDir, string dataDir)
@@ -49,24 +50,27 @@ namespace VisuallySafe
         /// <summary>Compile rules if needed. Safe to call from a background thread.</summary>
         public void Prepare()
         {
-            if (!File.Exists(yara) || !File.Exists(yarac) || !File.Exists(core)) { Ready = false; Status = "YARA not installed"; return; }
+            if (!File.Exists(yara) || !File.Exists(yarac)) { Ready = false; Status = "YARA not installed"; return; }
             var user = Directory.GetFiles(userDir, "*.yar").Concat(Directory.GetFiles(userDir, "*.yara")).OrderBy(f => f).ToArray();
-            DateTime newest = user.Select(File.GetLastWriteTimeUtc).Concat(new[] { File.GetLastWriteTimeUtc(core) }).Max();
+            bool hasCore = File.Exists(core);
+            if (!hasCore && user.Length == 0) { Ready = false; Status = "YARA rules not downloaded yet"; return; }     // the core rules are fetched on the first online check
+            DateTime newest = user.Select(File.GetLastWriteTimeUtc).Concat(hasCore ? new[] { File.GetLastWriteTimeUtc(core) } : new DateTime[0]).Max();
             string stamp = compiled + ".list";
-            string list = core + "|" + string.Join("|", user);
+            string list = (hasCore ? core : "no-core") + "|" + string.Join("|", user);
             bool fresh = File.Exists(compiled) && File.GetLastWriteTimeUtc(compiled) >= newest
                          && File.Exists(stamp) && File.ReadAllText(stamp) == list;
             string note = "";
             if (!fresh)
             {
-                var args = new StringBuilder("-w \"core:" + core + "\"");
+                var args = new StringBuilder("-w");
+                if (hasCore) args.Append(" \"core:" + core + "\"");
                 foreach (string u in user) args.Append(" \"user:" + u + "\"");
                 string err;
                 if (Run(yarac, args + " \"" + compiled + "\"", 120, out err) != 0)
                 {
                     // A broken rule of the user's must not switch YARA off: fall back to the core rules.
                     note = " (your rules have an error and were skipped)";
-                    if (Run(yarac, "-w \"core:" + core + "\" \"" + compiled + "\"", 120, out err) != 0)
+                    if (!hasCore || Run(yarac, "-w \"core:" + core + "\" \"" + compiled + "\"", 120, out err) != 0)
                     { Ready = false; Status = "YARA rules failed to compile"; return; }
                 }
                 File.WriteAllText(stamp, note.Length == 0 ? list : "");
