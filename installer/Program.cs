@@ -290,7 +290,7 @@ namespace TinyGuardSetup
         {
             var p = NewPage();
             L(p, "Welcome to Visually Safe", 40, 24, 780, 56, 38, true);
-            L(p, "A friendly helper for Windows' built-in protection. A little wizard walks across the screen, tells you what your computer is doing in plain words and a spoken voice, and warns you if something is wrong.", 44, 92, 770, 100, 21, false, Soft);
+            L(p, "A helpful antivirus companion. Clear green, yellow and red badges show what has been checked and what is safe, using Windows' built-in protection. An optional wizard can explain things aloud.", 44, 92, 770, 100, 21, false, Soft);
             L(p, "It works alongside Microsoft Defender. It does not replace it, and it is not made by or connected to Microsoft.", 44, 190, 770, 60, 18, false, Soft);
             bool win = Installer.WindowsOk, net = Installer.DotNet48(), def = Installer.DefenderFound();
             L(p, (win ? "✓  " : "✗  ") + "Windows 10 or 11" + (win ? "" : "  (this needs Windows 10 or newer)"), 44, 262, 770, 32, 21, true, win ? Green : Color.Firebrick);
@@ -315,7 +315,7 @@ namespace TinyGuardSetup
             var lMail = L(p, "Your email address, so you get an alert if he finds a problem (optional):", 44, 276, 770, 30, 19, false, Soft);
             tEmail = new TextBox { Left = 44, Top = 308, Width = 600, Font = F(22) };
             p.Controls.AddRange(new Control[] { tName, tEmail });
-            cWizard = new CheckBox { Text = "Show the wizard on the screen (recommended)", Left = 44, Top = 372, Width = 770, Height = 32, Font = F(20), Checked = true };
+            cWizard = new CheckBox { Text = "Also show the helper wizard on the screen", Left = 44, Top = 372, Width = 770, Height = 32, Font = F(20), Checked = true };
             cDesktop = new CheckBox { Text = "Put a Visually Safe icon on the Desktop", Left = 44, Top = 410, Width = 770, Height = 32, Font = F(20), Checked = true };
             cStart = new CheckBox { Text = "Start Visually Safe when Windows starts", Left = 44, Top = 448, Width = 770, Height = 32, Font = F(20), Checked = true };
             p.Controls.AddRange(new Control[] { cWizard, cDesktop, cStart });

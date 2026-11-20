@@ -2,7 +2,7 @@
 
 _Formerly called TinyGuard._
 
-**A helpful antivirus companion.** Visually Safe puts an easy face on Microsoft Defender, made for people who find computers confusing. A small wizard walks along the taskbar, speaks in the Windows voice, and tells you in plain words what your computer is doing, whether it is okay, and when something needs attention. A family member or carer can set it up for someone else.
+**A helpful antivirus companion.** Visually Safe shows you, at a glance, what has been checked and what is safe. Every file and folder gets a clear badge: a green tick when it has been scanned and is safe, yellow when it deserves a look, red when it is dangerous. It sits on top of Microsoft Defender and makes it easy to use, made for people who find computers confusing. A family member or carer can set it up for someone else.
 
 It works **alongside Microsoft Defender and does not replace it.** It is not made by, endorsed by, or connected to Microsoft.
 
@@ -10,11 +10,12 @@ Works on Windows 10 and Windows 11.
 
 ## What it does
 
-- **"Is my computer okay?"**: a green, yellow or red answer, spoken and shown, taken from Windows' own protection status. A *Fix it* button updates Windows' protection and starts a Windows scan.
-- **Reads Windows' protection out loud**: scans starting and finishing, and anything Windows or Visually Safe finds, in everyday words. The family member can get an email.
-- **Boxes on your icons**: a swirling ring while a file is checked, then a green tick, yellow "!" or red box when you hover over it. The wizard explains what they mean.
+- **Boxes on your icons**: a swirling ring while a file is checked, then a green tick, yellow "!" or red box. You can see at a glance what is safe.
+- **Scan map**: every folder drawn as a node, so you can see what has been scanned, what has not, and where anything was flagged.
+- **"Is my computer okay?"**: a green, yellow or red answer taken from Windows' own protection status. A *Fix it* button updates Windows' protection and starts a Windows scan.
+- **Plain-words reports**: scans starting and finishing, and anything Windows or Visually Safe finds, in everyday words. The family member can get an email.
 - **Twice-a-week check** (Mondays and Thursdays): updates the protection and checks the Desktop and Downloads. It also notices new programs that set themselves to start with Windows.
-- **Ask the wizard anything**, by typing or speaking. Answers come from an AI you choose that runs on your own PC (LM Studio, Ollama and similar), so nothing is sent to a company.
+- **Optional helper wizard** (can be turned off): ask anything, by typing or speaking. Answers come from an AI you choose that runs on your own PC (LM Studio, Ollama and similar), so nothing is sent to a company.
 - **Extra checks of its own**: file fingerprints against public lists, YARA rules, and a small on-device model. These are a second opinion, not a replacement for Windows' protection.
 
 ## Install
