@@ -183,7 +183,7 @@ namespace VisuallySafe
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.87";
+        public const string Version = "1.0.88";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -420,7 +420,7 @@ namespace VisuallySafe
                         try { Task.WaitAll(kids.ToArray()); } catch { }
                         Verdict worst = Verdict.Clean; string root = path.TrimEnd((char)92) + (char)92;
                         foreach (var kv in LedgerSnapshot())
-                            if (kv.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase)) { var v = kv.Value.Quarantined || kv.Value.Deleted ? Verdict.Malicious : kv.Value.Verdict; if (v > worst && v >= Verdict.Suspicious) worst = v; }
+                            if (kv.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase)) { var v = kv.Value.Quarantined || kv.Value.Deleted ? Verdict.Malicious : ShownVerdict(kv.Value); if (v > worst && v >= Verdict.Suspicious) worst = v; }
                         RaiseGlowEnd(path, worst);
                     }
                     else ManualFile(path, true).Wait();
@@ -491,7 +491,7 @@ namespace VisuallySafe
                         {
                             Verdict v = Verdict.Unknown;
                             var le = LedgerGet(path);
-                            if (le != null) v = le.Quarantined || le.Deleted ? Verdict.Malicious : le.Verdict;
+                            if (le != null) v = le.Quarantined || le.Deleted ? Verdict.Malicious : ShownVerdict(le);
                             RaiseGlowEnd(path, v);
                         }
                         Interlocked.Decrement(ref manualPending);
@@ -970,7 +970,7 @@ namespace VisuallySafe
                     if (folderScans[k].Item2 < Verdict.Suspicious) continue;
                     string root = k.TrimEnd((char)92) + (char)92; Verdict worst = Verdict.Clean;
                     foreach (var kv in snap)
-                        if (kv.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase)) { var v = kv.Value.Quarantined || kv.Value.Deleted ? Verdict.Malicious : kv.Value.Verdict; if (v > worst && v >= Verdict.Suspicious) worst = v; }
+                        if (kv.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase)) { var v = kv.Value.Quarantined || kv.Value.Deleted ? Verdict.Malicious : ShownVerdict(kv.Value); if (v > worst && v >= Verdict.Suspicious) worst = v; }
                     if (worst < folderScans[k].Item2) folderScans[k] = Tuple.Create(folderScans[k].Item1, worst);
                 }
                 File.WriteAllLines(FolderScanFile, folderScans.Select(kv => kv.Key + (char)9 + kv.Value.Item1.Ticks + (char)9 + (int)kv.Value.Item2).ToArray());
@@ -989,11 +989,23 @@ namespace VisuallySafe
         }
 
         /// <summary>When an item (file or whole folder) was last scanned and what the result was, for the hover badge.</summary>
+        /// <summary>What a badge shows for a ledger entry: nothing is known about the file, but Microsoft Defender looked at it and found nothing, so it counts as checked and clear (green).</summary>
+        public static Verdict ShownVerdict(LedgerEntry le)
+        {
+            if (le.Verdict == Verdict.Unknown && (le.Detail ?? "").IndexOf("Microsoft Defender: no threat found", StringComparison.OrdinalIgnoreCase) >= 0) return Verdict.Clean;
+            return le.Verdict;
+        }
+
         public bool BadgeFor(string path, out DateTime when, out Verdict v)
         {
             when = DateTime.MinValue; v = Verdict.Unknown;
             var le = LedgerGet(path);
-            if (le != null) { when = le.Time; v = le.Quarantined || le.Deleted ? Verdict.Malicious : le.Verdict; return when.Ticks >= S.BadgeResetAt; }
+            if (le != null)
+            {
+                when = le.Time; v = le.Quarantined || le.Deleted ? Verdict.Malicious : ShownVerdict(le);
+                // Nothing known about the file, but Microsoft Defender looked at it and found nothing: that is a checked, clear file, so it gets the green tick.
+                return when.Ticks >= S.BadgeResetAt;
+            }
             lock (folderLock)
             {
                 LoadFolderScans();
@@ -1039,7 +1051,7 @@ namespace VisuallySafe
             if (!Directory.Exists(p))
             {
                 var le = LedgerGet(p);
-                if (le != null) v = le.Quarantined || le.Deleted ? Verdict.Malicious : le.Verdict;
+                if (le != null) v = le.Quarantined || le.Deleted ? Verdict.Malicious : ShownVerdict(le);
                 if (!File.Exists(p) && le == null) v = Verdict.Unknown;
             }
             RaiseGlowEnd(p, v);
@@ -1068,7 +1080,7 @@ namespace VisuallySafe
                     {
                         Verdict worst = Verdict.Clean; string root = item.Path.TrimEnd((char)92) + (char)92;
                         foreach (var kv in LedgerSnapshot())
-                            if (kv.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase)) { var v = kv.Value.Quarantined || kv.Value.Deleted ? Verdict.Malicious : kv.Value.Verdict; if (v > worst && v >= Verdict.Suspicious) worst = v; }
+                            if (kv.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase)) { var v = kv.Value.Quarantined || kv.Value.Deleted ? Verdict.Malicious : ShownVerdict(kv.Value); if (v > worst && v >= Verdict.Suspicious) worst = v; }
                         RaiseGlowEnd(item.Path, worst);
                         busy = false; continue;
                     }
