@@ -775,7 +775,7 @@ namespace VisuallySafe
             if (Arg(args, "--wizard-demo") != null)   // developer aid: show the wizard with a spoken message for a while, in a throwaway data folder
             {
                 string tmpw = Path.Combine(Path.GetTempPath(), "tg-wiz-" + Guid.NewGuid().ToString("N").Substring(0, 6));
-                Environment.SetEnvironmentVariable("TINYGUARD_NOSHIELDS", "1");
+                Environment.SetEnvironmentVariable("VISUALLYSAFE_NOSHIELDS", "1");
                 var e9 = new Engine(Path.Combine(tmpw, "data"));
                 Directory.CreateDirectory(e9.DataDir);
                 new HelperConfig { On = true, Name = "Sam", IntroDone = true }.Save(e9.DataDir);
@@ -822,7 +822,7 @@ namespace VisuallySafe
             {
                 var lg = new System.Text.StringBuilder();
                 string tmpd = Path.Combine(Path.GetTempPath(), "tg-desk-" + Guid.NewGuid().ToString("N").Substring(0, 6));
-                Environment.SetEnvironmentVariable("TINYGUARD_NOSHIELDS", "1");
+                Environment.SetEnvironmentVariable("VISUALLYSAFE_NOSHIELDS", "1");
                 using (var e7 = new Engine(Path.Combine(tmpd, "data")))
                 {
                     e7.S.AutoQuarantine = false;
@@ -853,7 +853,7 @@ namespace VisuallySafe
             {
                 var lg = new System.Text.StringBuilder();
                 string dir = Arg(args, "--mixed-dir"); string tmpd = Path.Combine(Path.GetTempPath(), "tg-mixed-" + Guid.NewGuid().ToString("N").Substring(0, 6));
-                Environment.SetEnvironmentVariable("TINYGUARD_NOSHIELDS", "1");
+                Environment.SetEnvironmentVariable("VISUALLYSAFE_NOSHIELDS", "1");
                 using (var e6 = new Engine(Path.Combine(tmpd, "data")))
                 {
                     var items = Directory.GetFileSystemEntries(dir);
@@ -896,7 +896,7 @@ namespace VisuallySafe
             {
                 var lg = new System.Text.StringBuilder();
                 string tmp = Path.Combine(Path.GetTempPath(), "tg-shield-" + Guid.NewGuid().ToString("N").Substring(0, 6)); Directory.CreateDirectory(tmp);
-                Environment.SetEnvironmentVariable("TINYGUARD_NOSHIELDS", "1");
+                Environment.SetEnvironmentVariable("VISUALLYSAFE_NOSHIELDS", "1");
                 using (var e5 = new Engine(Path.Combine(tmp, "data")))
                 {
                     lg.AppendLine("ransomware simulation: " + RansomShield.SelfTest(e5.Shield, e5));
@@ -990,11 +990,11 @@ namespace VisuallySafe
                     string[] names = { "status", "activity", "network", "rootkit", "assistant", "map", "nettools", "defrag", "quarantine", "settings", "shields" };
                     for (int i = 0; i < 11; i++)
                     {
-                        if (i == 0 && Environment.GetEnvironmentVariable("TINYGUARD_SCANDEMO") == "1")
+                        if (i == 0 && Environment.GetEnvironmentVariable("VISUALLYSAFE_SCANDEMO") == "1")
                         { eng.QuickScan(); System.Threading.Thread.Sleep(4000); }   // developer aid: show a scan in progress
                         f.SelectPage(i);
                         Application.DoEvents();
-                        if (i == 3 && Environment.GetEnvironmentVariable("TINYGUARD_ROOTKITDEMO") == "1")
+                        if (i == 3 && Environment.GetEnvironmentVariable("VISUALLYSAFE_ROOTKITDEMO") == "1")
                             for (int t = 0; t < 240 && !f.RootkitDone; t++) { System.Threading.Thread.Sleep(500); Application.DoEvents(); }
                         Application.DoEvents();
                         if (i == 2 && eng.Net != null && eng.Net.Running)
@@ -1002,10 +1002,10 @@ namespace VisuallySafe
                             // let a few seconds of traffic build up so the graphs have something to show
                             for (int t = 0; t < 12; t++) { System.Threading.Thread.Sleep(500); f.RefreshNetwork(); Application.DoEvents(); }
                         }
-                        if (i == 6 && Environment.GetEnvironmentVariable("TINYGUARD_PORTSDEMO") == "1") { eng.Tools.RunListening(); for (int t = 0; t < 80; t++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); } }
-                        if (i == 7 && Environment.GetEnvironmentVariable("TINYGUARD_DEFRAGDEMO") == "1") { DefragService.Snapshot = DefragDemo.Make(); DefragService.Prev = null; for (int t = 0; t < 6; t++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); } }
+                        if (i == 6 && Environment.GetEnvironmentVariable("VISUALLYSAFE_PORTSDEMO") == "1") { eng.Tools.RunListening(); for (int t = 0; t < 80; t++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); } }
+                        if (i == 7 && Environment.GetEnvironmentVariable("VISUALLYSAFE_DEFRAGDEMO") == "1") { DefragService.Snapshot = DefragDemo.Make(); DefragService.Prev = null; for (int t = 0; t < 6; t++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); } }
                         if (i == 4) for (int t = 0; t < 15; t++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); } // let the AI page's timer run
-                        if (i == 4 && Environment.GetEnvironmentVariable("TINYGUARD_DUMP") == "1")
+                        if (i == 4 && Environment.GetEnvironmentVariable("VISUALLYSAFE_DUMP") == "1")
                         {
                             var sbd = new System.Text.StringBuilder();
                             Action<Control, int> walk = null;
@@ -1013,7 +1013,7 @@ namespace VisuallySafe
                             walk(f, 0);
                             File.WriteAllText(Path.Combine(shot, "dump.txt"), sbd.ToString());
                         }
-                        if (i == 10 && Environment.GetEnvironmentVariable("TINYGUARD_DUMP") == "2")
+                        if (i == 10 && Environment.GetEnvironmentVariable("VISUALLYSAFE_DUMP") == "2")
                         {
                             var sbd = new System.Text.StringBuilder();
                             Action<Control, int> walk = null;
@@ -1023,9 +1023,9 @@ namespace VisuallySafe
                         }
                         if (i == 5)
                         {
-                            if (Environment.GetEnvironmentVariable("TINYGUARD_MAPDEMO") == "1") eng.QuickScan();
+                            if (Environment.GetEnvironmentVariable("VISUALLYSAFE_MAPDEMO") == "1") eng.QuickScan();
                             for (int t = 0; t < 30; t++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); }   // build the map, start the animation
-                            if (Environment.GetEnvironmentVariable("TINYGUARD_MAPDEMO") == "1")
+                            if (Environment.GetEnvironmentVariable("VISUALLYSAFE_MAPDEMO") == "1")
                             {
                                 using (var b1 = new Bitmap(f.Width, f.Height)) { f.DrawToBitmap(b1, new Rectangle(0, 0, f.Width, f.Height)); b1.Save(Path.Combine(shot, "map1.png"), ImageFormat.Png); }
                                 for (int t = 0; t < 40; t++) { System.Threading.Thread.Sleep(100); Application.DoEvents(); }

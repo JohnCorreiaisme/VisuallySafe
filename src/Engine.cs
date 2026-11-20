@@ -266,9 +266,9 @@ namespace VisuallySafe
             worker = new Thread(Work) { IsBackground = true, Name = "Visually Safe scanner", Priority = ThreadPriority.BelowNormal };
             worker.Start();
             procs = new ProcWatch(ProcessStarted);
-            if (Environment.GetEnvironmentVariable("TINYGUARD_NOSHIELDS") != "1") Shield.Start();
+            if (Environment.GetEnvironmentVariable("VISUALLYSAFE_NOSHIELDS") != "1") Shield.Start();
             if (Admin.IsAdmin) { Net = new NetMonitor(); Net.Start(); }
-            else if (Environment.GetEnvironmentVariable("TINYGUARD_NETDEMO") == "1") { Net = new NetMonitor(); Net.Demo(); } // developer aid: fake traffic for screenshots
+            else if (Environment.GetEnvironmentVariable("VISUALLYSAFE_NETDEMO") == "1") { Net = new NetMonitor(); Net.Demo(); } // developer aid: fake traffic for screenshots
             timer = new Timer(_ => Tick(), null, 500, 500);
         }
 
@@ -1524,7 +1524,7 @@ namespace VisuallySafe
 
         // ---- a quarantined file leaves a small stand-in under its old name, so its icon stays (red) and double-clicking it
         //      can't run anything. Scanning the stand-in with Visually Safe re-checks the real file and gives it back only if it is clean now.
-        const string PlaceholderMark = "TINYGUARD-QUARANTINED:";
+        const string PlaceholderMark = "VISUALLYSAFE-QUARANTINED:", OldPlaceholderMark = "TINYGUARD-QUARANTINED:";     // the old one is still read, for files quarantined before the rename
 
         static void WritePlaceholder(string path, string id)
         {
@@ -1545,9 +1545,10 @@ namespace VisuallySafe
                 var fi = new FileInfo(path);
                 if (fi.Length < 30 || fi.Length > 600) return null;
                 string t = File.ReadAllText(path);
-                if (!t.StartsWith(PlaceholderMark, StringComparison.Ordinal)) return null;
+                string mark = t.StartsWith(PlaceholderMark, StringComparison.Ordinal) ? PlaceholderMark : t.StartsWith(OldPlaceholderMark, StringComparison.Ordinal) ? OldPlaceholderMark : null;
+                if (mark == null) return null;
                 int e = t.IndexOfAny(new[] { (char)13, (char)10 });
-                return e > PlaceholderMark.Length ? t.Substring(PlaceholderMark.Length, e - PlaceholderMark.Length) : null;
+                return e > mark.Length ? t.Substring(mark.Length, e - mark.Length) : null;
             }
             catch { return null; }
         }

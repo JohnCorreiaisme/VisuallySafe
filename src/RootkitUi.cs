@@ -149,7 +149,7 @@ namespace VisuallySafe
         {
             if (!Visible) return;
             // developer aid: start the check by itself so a screenshot can show results
-            if (Environment.GetEnvironmentVariable("TINYGUARD_ROOTKITDEMO") == "1" && !check.Running && !Done) Start();
+            if (Environment.GetEnvironmentVariable("VISUALLYSAFE_ROOTKITDEMO") == "1" && !check.Running && !Done) Start();
             if (check.Running)
             {
                 status.ForeColor = Theme.Text;

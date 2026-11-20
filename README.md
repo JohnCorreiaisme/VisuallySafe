@@ -244,8 +244,8 @@ one SHA-256 per line: `blocklist.txt` and `allowlist.txt`.
 
 ## Developer switches
 
-- `TINYGUARD_DATA=<folder>` environment variable: use a different data folder (for testing).
-- `TINYGUARD_NETDEMO=1`: made-up traffic on the Network page, for screenshots without admin.
+- `VISUALLYSAFE_DATA=<folder>` environment variable: use a different data folder (for testing).
+- `VISUALLYSAFE_NETDEMO=1`: made-up traffic on the Network page, for screenshots without admin.
 - `--exit-after N`: quit after N seconds. `--shot <folder>`: save a picture of each page.
 - `--show`: open the dashboard on launch.
 - `--update-rules`: run one rule update check, result in `<data>\update.log`.
@@ -360,7 +360,7 @@ An AI agent is told what Visually Safe does (this README and the list of source 
 
 ## 1.0.31 — Shields
 New **Shields** page (last item in the sidebar).
-- **Ransomware shield**: watches Documents, Pictures, Desktop, Videos and Music. A hidden canary file (`!~tinyguard-canary.docx`) sits in each folder; if anything changes, renames or deletes it, or about 8 files turn into scrambled data (wrong file header plus noise-like contents) or get renamed to odd extensions within 20 seconds, Visually Safe finds the programs writing the most data that are not Windows or a trusted publisher, stops them, cuts their internet and quarantines them (switchable to warn-only). Build and cache folders (`bin`, `obj`, `.git`, `node_modules`, …) and your safe folders are ignored. "Test it safely" runs a made-up ransomware in a throw-away folder.
+- **Ransomware shield**: watches Documents, Pictures, Desktop, Videos and Music. A hidden canary file (`!~visuallysafe-canary.docx`) sits in each folder; if anything changes, renames or deletes it, or about 8 files turn into scrambled data (wrong file header plus noise-like contents) or get renamed to odd extensions within 20 seconds, Visually Safe finds the programs writing the most data that are not Windows or a trusted publisher, stops them, cuts their internet and quarantines them (switchable to warn-only). Build and cache folders (`bin`, `obj`, `.git`, `node_modules`, …) and your safe folders are ignored. "Test it safely" runs a made-up ransomware in a throw-away folder.
 - **Web blocklist**: blocks known malware and phishing websites for every program by pointing them at 0.0.0.0 in the Windows hosts file (free lists from URLhaus and Phishing Army, refreshed daily, at most 40,000 sites; Microsoft, Google, GitHub and similar are never blocked). Needs administrator rights, keeps a backup (`hosts.original.bak`), only touches its own marked block, has custom Block / Allow and a "Check a domain" box. Off by default: switch it on in Shields. It can't stop a browser that uses its own encrypted DNS.
 - **Malware fingerprint feed**: with your free abuse.ch key (Settings) Visually Safe pulls the newest MalwareBazaar fingerprints every 12 hours into its block list. (abuse.ch's keyless downloads were switched off, so the key is required.)
 - **Self-protection**: warns if Visually Safe's program file (same version, different fingerprint) or its settings file are changed behind its back (and puts the protection setting back), restarts Visually Safe within 2 minutes if something kills it (scheduled task "VisuallySafe Watchdog"; not after you use Exit), and optionally stops ordinary programs from ending or injecting into it.

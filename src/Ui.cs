@@ -236,7 +236,7 @@ namespace VisuallySafe
 "<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><ExecutionTimeLimit>PT0S</ExecutionTimeLimit><Priority>7</Priority></Settings>\r\n" +
 "  <Actions Context=\"Author\"><Exec><Command>" + SecurityElement.Escape(Application.ExecutablePath) + "</Command></Exec></Actions>\r\n" +
 "</Task>\r\n";
-            string file = Path.Combine(Path.GetTempPath(), "tinyguard-task.xml");
+            string file = Path.Combine(Path.GetTempPath(), "visuallysafe-task.xml");
             File.WriteAllText(file, xml, Encoding.Unicode);
             bool ok = Schtasks("/Create /F /TN " + TaskName + " /XML \"" + file + "\"") == 0;
             try { File.Delete(file); } catch { }

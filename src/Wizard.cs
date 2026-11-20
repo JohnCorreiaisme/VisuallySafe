@@ -1060,7 +1060,7 @@ namespace VisuallySafe
                 if (r != null) worst = "The most serious thing found right now: " + r.Name + " (" + r.Detail + ").";
             }
             catch { }
-            return "FACTS ABOUT THIS COMPUTER AND THE TINYGUARD PROGRAM:\n" + BoxesText() + "\n" + Status() + "\n" + worst +
+            return "FACTS ABOUT THIS COMPUTER AND THE VISUALLY SAFE PROGRAM:\n" + BoxesText() + "\n" + Status() + "\n" + worst +
                 "\nVisually Safe also works alongside Microsoft Defender. It checks new programs, the Desktop and Downloads twice a week (Monday and Thursday), and keeps its protection updated by itself.";
         }
 

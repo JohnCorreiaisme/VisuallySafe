@@ -253,7 +253,7 @@ namespace VisuallySafe
             try
             {
                 Directory.CreateDirectory(tmp);
-                string bad = Path.Combine(tmp, "marker.bin"); File.WriteAllText(bad, "tinyguard self-test marker " + Guid.NewGuid());
+                string bad = Path.Combine(tmp, "marker.bin"); File.WriteAllText(bad, "visuallysafe self-test marker " + Guid.NewGuid());
                 string sha; using (var h = SHA256.Create()) sha = BitConverter.ToString(h.ComputeHash(File.ReadAllBytes(bad))).Replace("-", "").ToLowerInvariant();
                 string data = Path.Combine(tmp, "data"); Directory.CreateDirectory(data);
                 File.WriteAllLines(Path.Combine(data, "blocklist.txt"), new[] { sha });

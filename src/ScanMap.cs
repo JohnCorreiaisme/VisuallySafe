@@ -215,7 +215,7 @@ namespace VisuallySafe
             eng = engine;
             BackColor = Theme.Bg;
             Cursor = Cursors.Hand;
-            if (Environment.GetEnvironmentVariable("TINYGUARD_MAPFOLLOW") == "0") Follow = false;   // developer aid
+            if (Environment.GetEnvironmentVariable("VISUALLYSAFE_MAPFOLLOW") == "0") Follow = false;   // developer aid
             timer.Tick += (s, e) => Tick();
             timer.Start();
         }

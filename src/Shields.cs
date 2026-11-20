@@ -142,7 +142,7 @@ namespace VisuallySafe
 
         public RansomShield(Shields s, Engine e) { sh = s; eng = e; }
 
-        const string CanaryName = "!~tinyguard-canary.docx";
+        const string CanaryName = "!~visuallysafe-canary.docx";
         static readonly string[] Skip = { ".git", "node_modules", "bin", "obj", ".godot", ".import", "__pycache__", ".vs", "appdata", "library", "build", "dist", "cache", "temp", "tmp", ".gradle", "target" };
         static readonly HashSet<string> UserExt = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".pdf", ".txt", ".rtf", ".odt", ".ods", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".mp3", ".mp4", ".mov", ".avi", ".mkv", ".zip", ".rar", ".7z", ".csv", ".sql", ".db", ".sqlite", ".psd", ".blend", ".glb", ".fbx", ".wav", ".flac", ".md", ".json", ".xml", ".html" };
         static readonly HashSet<string> BenignNew = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".tmp", ".bak", ".old", ".crdownload", ".part", ".partial", ".download", ".temp", ".backup", ".orig", ".lnk", ".blend1", ".blend2", ".new", ".swp", ".zip", ".rar", ".7z", ".txt", ".docx", ".xlsx", ".pptx", ".pdf", ".jpg", ".png" };
@@ -218,6 +218,8 @@ namespace VisuallySafe
         {
             try
             {
+                string old = Path.Combine(dir, "!~tinyguard-canary.docx");     // made before the rename
+                if (File.Exists(old)) { File.SetAttributes(old, FileAttributes.Normal); File.Delete(old); }
                 string p = Path.Combine(dir, CanaryName);
                 string text = CanaryText();
                 if (!File.Exists(p)) { File.WriteAllText(p, text); File.SetAttributes(p, FileAttributes.Hidden | FileAttributes.System); }

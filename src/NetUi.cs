@@ -205,7 +205,7 @@ namespace VisuallySafe
             if (!on) { empty.Visible = false; totals.Text = eng.Net != null && eng.Net.Error != null ? "Monitor off: " + eng.Net.Error : ""; return; }
 
             if ((DateTime.Now - blockedRead).TotalSeconds > 10) { blocked = Firewall.Blocked(); blockedRead = DateTime.Now; }
-            if (Environment.GetEnvironmentVariable("TINYGUARD_NETDEMO") == "1") blocked.Add(@"C:\Users\Example\Downloads\mystery-tool.exe");
+            if (Environment.GetEnvironmentVariable("VISUALLYSAFE_NETDEMO") == "1") blocked.Add(@"C:\Users\Example\Downloads\mystery-tool.exe");
             var fresh = eng.Net.Snapshot(blocked);
             // Keep rows where they are: re-sort (busiest first) only when a program appears/leaves or every 6 s,
             // otherwise rows would jump around every second.

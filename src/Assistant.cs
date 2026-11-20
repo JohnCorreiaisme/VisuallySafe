@@ -247,7 +247,7 @@ RULES
         {
             var e = c.Eng;
             var sb = new StringBuilder();
-            sb.AppendLine("TINYGUARD REPORT " + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + " (Visually Safe " + Engine.Version + ", Windows)");
+            sb.AppendLine("VISUALLY SAFE REPORT " + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + " (Visually Safe " + Engine.Version + ", Windows)");
             sb.AppendLine("Protection: " + (e.S.Enabled ? "on" : "OFF") + "; online checks: " + (e.S.Cloud ? "on" : "off") + "; offline AI model: " + (e.Ai != null ? "on" : "missing")
                           + "; YARA rules " + e.Yara.RulesVersion + "; network monitor: " + (c.NetworkOn ? "on" : "off") + "; running as administrator: " + Admin.IsAdmin);
             sb.AppendLine("Watched folders: " + string.Join(" | ", e.S.Folders));

@@ -385,7 +385,7 @@ namespace VisuallySafe
         protected override void OnPaint(PaintEventArgs e)
         {
             try { Paint2(e); }
-            catch (Exception ex) { try { var sn = DefragService.Snapshot; File.AppendAllText(Path.Combine(Path.GetTempPath(), "tinyguard-paint.log"), DateTime.Now + " spot=" + spot + " file=[" + (sn != null && spot >= 0 && spot < sn.Files.Count ? sn.Files[spot] : "?") + "] " + ex + Environment.NewLine); } catch { } }
+            catch (Exception ex) { try { var sn = DefragService.Snapshot; File.AppendAllText(Path.Combine(Path.GetTempPath(), "visuallysafe-paint.log"), DateTime.Now + " spot=" + spot + " file=[" + (sn != null && spot >= 0 && spot < sn.Files.Count ? sn.Files[spot] : "?") + "] " + ex + Environment.NewLine); } catch { } }
         }
 
         void Paint2(PaintEventArgs e)
