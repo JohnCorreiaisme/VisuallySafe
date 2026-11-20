@@ -1,7 +1,5 @@
 # Visually Safe
 
-_Formerly called TinyGuard._
-
 **A helpful antivirus companion.** Visually Safe shows you, at a glance, what has been checked and what is safe. Every file and folder gets a clear badge: a green tick when it has been scanned and is safe, yellow when it deserves a look, red when it is dangerous. It sits on top of Microsoft Defender and makes it easy to use, made for people who find computers confusing. A family member or carer can set it up for someone else.
 
 It works **alongside Microsoft Defender and does not replace it.** It is not made by, endorsed by, or connected to Microsoft.
