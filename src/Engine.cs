@@ -185,7 +185,7 @@ namespace VisuallySafe
 
     class Engine : IDisposable
     {
-        public const string Version = "1.0.91";
+        public const string Version = "1.0.92";
         const string EicarSha = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f";
         const int MaxHistory = 500;
 
@@ -615,6 +615,7 @@ namespace VisuallySafe
         /// <summary>Ask Windows' protection about the warnings already listed: where it finds nothing, Visually Safe's own guess is dropped.</summary>
         public void RecheckWarnings()
         {
+            try { UpgradeUnknownLedger(); } catch { }
             if (!S.UseDefender || !DefenderLink.Available) return;
             var paths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);     // path -> detail
             lock (gate)
@@ -1394,6 +1395,35 @@ namespace VisuallySafe
                 }
                 if (score >= 3) { rec.Verdict = Verdict.Suspicious; rec.Detail = Capital(string.Join("; ", why)); }
             }
+
+            // Every check came back empty and it is not something that runs code (a document, picture, shortcut, text file...): checked and clear.
+            if (rec.Verdict == Verdict.Unknown && !isPe && !RunsCode(path) && PlainUnknown(rec.Detail))
+            { rec.Verdict = Verdict.Clean; rec.Detail = "Not a program, and nothing suspicious was found in it"; }
+        }
+
+        static bool PlainUnknown(string d) { d = d ?? ""; return d.StartsWith("Not signed, and no online record", StringComparison.Ordinal) || d.StartsWith("Shortcut: checked on this PC", StringComparison.Ordinal); }
+
+        static readonly HashSet<string> CodeExts = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        { ".hta", ".msi", ".jar", ".docm", ".xlsm", ".pptm", ".iso", ".img", ".dll", ".sys", ".cpl", ".vbe", ".exe", ".scr", ".com", ".pif" };
+        /// <summary>Files that can run code. Shortcuts, documents, pictures and text are not in this list.</summary>
+        static bool RunsCode(string path)
+        {
+            string ext = Path.GetExtension(path);
+            return ScriptExts.Contains(ext) || RareExts.Contains(ext) || CodeExts.Contains(ext);
+        }
+
+        /// <summary>Earlier versions left every unrecognised file as "unknown" (grey). Files that are not programs and had nothing found in them become clear (green).</summary>
+        void UpgradeUnknownLedger()
+        {
+            bool changed = false;
+            lock (ledger)
+                foreach (var kv in ledger)
+                {
+                    var e = kv.Value;
+                    if (e.Verdict == Verdict.Unknown && !e.Quarantined && !e.Deleted && PlainUnknown(e.Detail) && !RunsCode(kv.Key))
+                    { e.Verdict = Verdict.Clean; e.Detail = "Not a program, and nothing suspicious was found in it"; changed = true; }
+                }
+            if (changed) { ledgerDirty = true; lock (folderLock) { LoadFolderScans(); RejudgeFolders(); } Bump(); }
         }
 
         /// <summary>
