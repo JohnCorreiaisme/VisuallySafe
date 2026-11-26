@@ -26,6 +26,10 @@ namespace VisuallySafeSetup
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             if (args.Length >= 1 && args[0] == "--update") return Installer.UpdateRun();
+            // quiet install and removal for package managers (winget): no windows, an exit code instead
+            bool silent = Array.Exists(args, a => a == "--silent" || a == "/S" || a == "/s");
+            if (silent && Array.IndexOf(args, "--uninstall") >= 0) return Installer.SilentUninstall();
+            if (silent) return Installer.SilentInstall();
             if (args.Length >= 1 && args[0] == "--uninstall") { Application.Run(new UninstallForm()); return 0; }
             if (args.Length >= 2 && args[0] == "--shots") { var f = new SetupForm(); f.Snap(args[1]); return 0; }
             Application.Run(new SetupForm());
@@ -180,6 +184,8 @@ namespace VisuallySafeSetup
                     k.SetValue("InstallLocation", dest);
                     k.SetValue("DisplayIcon", exe);
                     k.SetValue("UninstallString", "\"" + Path.Combine(dest, "VisuallySafeSetup.exe") + "\" --uninstall");
+                    k.SetValue("QuietUninstallString", "\"" + Path.Combine(dest, "VisuallySafeSetup.exe") + "\" --uninstall --silent");
+                    k.SetValue("URLInfoAbout", "https://github.com/JohnCorreiaisme/VisuallySafe");
                     k.SetValue("NoModify", 1, RegistryValueKind.DWord);
                     k.SetValue("NoRepair", 1, RegistryValueKind.DWord);
                 }
@@ -274,6 +280,33 @@ namespace VisuallySafeSetup
             }
             if (err != "cancelled") MessageBox.Show("The update could not finish (" + err + "). Nothing was changed, and your current version still works.", "Visually Safe update");
             return 1;
+        }
+
+        /// <summary>Quiet install (--silent): the same files, shortcuts and start-up entry as the normal installer's defaults, no pages. 0 = installed.</summary>
+        public static int SilentInstall()
+        {
+            string resultFile = Path.Combine(Path.GetTempPath(), "visuallysafe-setup-" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt");
+            string me = WindowsIdentity.GetCurrent().Name;
+            string err;
+            if (IsAdmin) { InstallFiles(Dest, resultFile, me); string r = File.Exists(resultFile) ? File.ReadAllText(resultFile).Trim() : ""; err = r == "OK" ? null : (r.Length == 0 ? "it did not finish" : r); }
+            else err = RunWithPermission("--install-files " + (char)34 + Dest + (char)34 + " " + (char)34 + resultFile + (char)34 + " " + (char)34 + me + (char)34, resultFile);
+            try { File.Delete(resultFile); } catch { }
+            if (err != null) return 1;
+            try { PersonalSetup(Dest, true, true, true, "", ""); } catch { }
+            return 0;
+        }
+
+        /// <summary>Quiet removal (--uninstall --silent). Settings are kept, as with the normal uninstaller. 0 = removed.</summary>
+        public static int SilentUninstall()
+        {
+            string resultFile = Path.Combine(Path.GetTempPath(), "visuallysafe-remove-" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt");
+            string err;
+            if (IsAdmin) { UninstallFiles(Dest, resultFile); string r = File.Exists(resultFile) ? File.ReadAllText(resultFile).Trim() : ""; err = r == "OK" ? null : (r.Length == 0 ? "it did not finish" : r); }
+            else err = RunWithPermission("--uninstall-files " + (char)34 + Dest + (char)34 + " " + (char)34 + resultFile + (char)34, resultFile);
+            try { File.Delete(resultFile); } catch { }
+            if (err != null) return 1;
+            try { RemovePersonal(); } catch { }
+            return 0;
         }
 
         public static string RunWithPermission(string verbArgs, string resultFile)
