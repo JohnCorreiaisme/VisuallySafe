@@ -6,7 +6,7 @@
 
 https://github.com/user-attachments/assets/2d20e1f3-8236-4516-854b-4a06de39bbb2
 
-> **Made for PCs that use Microsoft Defender (the antivirus built into Windows).** If you use another antivirus, some of them (for example Kaspersky) may warn about the installer. That is a false alarm: the installer is new and not yet code-signed. Microsoft Defender finds nothing in it, and the full source code is on this page.
+> **Made for PCs that use Microsoft Defender (the antivirus built into Windows).** It has not been tested together with other antivirus programs, so it may have errors alongside them. In particular, Kaspersky and Trapmine currently flag the installer; that is a false alarm, because the installer is new and not yet code-signed. Microsoft Defender finds nothing in it, and the full source code is on this page.
 
 It works **alongside Microsoft Defender and does not replace it.** It is not made by, endorsed by, or connected to Microsoft.
 
