@@ -310,6 +310,9 @@ namespace VisuallySafe
                 if (d.ShowDialog(owner) != DialogResult.OK) return;
                 mode = d.Mode;
             }
+            if (mode == AgentMode.Fix && MessageBox.Show(owner,
+                    agent.Name + " will be able to change files and settings on this computer without asking you first" + (Admin.IsAdmin ? ", with administrator rights" : "") + ".\n\nOnly say Yes if you have read its instructions and you trust them. If you are not sure, say No and use the terminal window instead, where you approve each step.\n\nLet it work on its own?",
+                    "Visually Safe", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             string work = AgentRunner.WorkDir(eng.DataDir);
             string file = AgentRunner.WritePrompt(eng.DataDir, prompt);
             try

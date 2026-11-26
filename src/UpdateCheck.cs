@@ -80,7 +80,7 @@ namespace VisuallySafe
                 ui.BeginInvoke(new Action(() =>
                 {
                     if (open != null && !open.IsDisposed) return;
-                    open = new UpdatePrompt(v.ToString(), notes, path);
+                    open = new UpdatePrompt(v.ToString(), notes, path, sha);
                     open.Show();
                 }));
             }
@@ -121,8 +121,27 @@ namespace VisuallySafe
 
         static string Hash(string file)
         {
-            using (var s = File.OpenRead(file)) using (var h = SHA256.Create())
-                return string.Concat(h.ComputeHash(s).Select(b => b.ToString("x2")));
+            using (var s = File.OpenRead(file)) return HashOf(s);
+        }
+
+        internal static string HashOf(Stream s)
+        {
+            using (var h = SHA256.Create()) return string.Concat(h.ComputeHash(s).Select(b => b.ToString("x2")));
+        }
+
+        // The checked installer stays open (others may read and run it, nobody may change, replace or delete it) until Visually Safe closes.
+        // The installer asks Windows for permission and starts itself again from this same file, so it must not be swappable in between.
+        static FileStream held;
+
+        /// <summary>Checks the installer once more and starts it. False if it no longer matches its published fingerprint.</summary>
+        internal static bool StartInstaller(string path, string sha)
+        {
+            var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            if (!HashOf(fs).Equals(sha, StringComparison.OrdinalIgnoreCase)) { fs.Dispose(); try { File.Delete(path); } catch { } return false; }
+            if (held != null) try { held.Dispose(); } catch { }
+            held = fs;
+            Process.Start(new ProcessStartInfo(path, "--update") { UseShellExecute = true });
+            return true;
         }
 
         /// <summary>A few plain lines from the release notes: the bullet points, without markdown.</summary>
@@ -145,14 +164,14 @@ namespace VisuallySafe
     /// <summary>The window offering the update: big text, one clear button.</summary>
     class UpdatePrompt : Form
     {
-        readonly string version, notes, path;
+        readonly string version, notes, path, sha;
         readonly Btn go = new Btn("Update now", true), later = new Btn("Not now");
 
         static int S(int v) { return (int)Math.Round(v * Theme.K); }
 
-        public UpdatePrompt(string version, string notes, string path)
+        public UpdatePrompt(string version, string notes, string path, string sha)
         {
-            this.version = version; this.notes = notes; this.path = path;
+            this.version = version; this.notes = notes; this.path = path; this.sha = sha;
             Text = "Visually Safe update"; Icon = Theme.AppIcon();
             ClientSize = new Size(S(680), S(420));
             StartPosition = FormStartPosition.CenterScreen; FormBorderStyle = FormBorderStyle.FixedSingle; MaximizeBox = false; MinimizeBox = false;
@@ -160,7 +179,12 @@ namespace VisuallySafe
             go.Bounds = new Rectangle(S(300), S(346), S(200), S(50)); later.Bounds = new Rectangle(S(512), S(346), S(140), S(50));
             go.Click += (s, e) =>
             {
-                try { Process.Start(new ProcessStartInfo(path, "--update") { UseShellExecute = true }); } catch { }
+                try
+                {
+                    if (!UpdateCheck.StartInstaller(path, sha))
+                        MessageBox.Show(this, "The downloaded update was changed after it was checked, so it was not started. Visually Safe will download it again later.", "Visually Safe");
+                }
+                catch { }
                 Close();
             };
             later.Click += (s, e) => Close();
@@ -170,7 +194,7 @@ namespace VisuallySafe
         /// <summary>Developer check: draws the window to a picture (--update-shot out.png).</summary>
         public static void Snap(string file)
         {
-            using (var f = new UpdatePrompt("1.0.90", UpdateCheck.Notes("- Bigger text in the wizard." + (char)10 + "- Updates itself from GitHub."), "x"))
+            using (var f = new UpdatePrompt("1.0.90", UpdateCheck.Notes("- Bigger text in the wizard." + (char)10 + "- Updates itself from GitHub."), "x", ""))
             {
                 f.Opacity = 0; f.ShowInTaskbar = false; f.Show(); Application.DoEvents();
                 using (var bmp = new Bitmap(f.ClientSize.Width, f.ClientSize.Height))

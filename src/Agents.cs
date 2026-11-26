@@ -144,14 +144,35 @@ namespace VisuallySafe
 "- Handy commands: Get-AuthenticodeSignature <file>, Get-FileHash <file>, winget upgrade, pnputil /enum-drivers, schtasks /query, reg query HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\r\n\r\n";
         }
 
+        /// <summary>
+        /// File names, paths and log text can be written by an attacker. Before they go inside the data fence they are made harmless:
+        /// no line breaks or control characters, no copy of the fence markers (so the data can't "close" the fence and add its own
+        /// instructions), and no heading marks.
+        /// </summary>
+        static string Data(string s)
+        {
+            var sb = new StringBuilder();
+            foreach (char c in s ?? "") sb.Append(c < (char)32 || c == (char)127 ? ' ' : c);
+            string t = sb.ToString();
+            foreach (string m in new[] { "<<<VISUALLYSAFE-DATA", "VISUALLYSAFE-DATA>>>", "VISUALLYSAFE-DATA", "<<<", ">>>" })
+                t = System.Text.RegularExpressions.Regex.Replace(t, System.Text.RegularExpressions.Regex.Escape(m), "[removed]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            t = t.TrimStart('#', ' ');
+            return t.Length > 600 ? t.Substring(0, 600) + "…" : t;
+        }
+
+        static string DataLines(string s)
+        {
+            return string.Join(((char)10).ToString(), (s ?? "").Replace(((char)13).ToString(), "").Split((char)10).Select(Data));
+        }
+
         public static string ForItem(Engine eng, PropInfo p)
         {
             var sb = new StringBuilder(Preamble(eng));
             sb.AppendLine("## What Visually Safe found");
             sb.AppendLine("<<<VISUALLYSAFE-DATA");
-            sb.AppendLine("Item: " + p.Title);
-            sb.AppendLine("Status: " + p.Verdict);
-            foreach (var kv in p.Rows) sb.AppendLine(kv.Key + ": " + kv.Value);
+            sb.AppendLine("Item: " + Data(p.Title));
+            sb.AppendLine("Status: " + Data(p.Verdict));
+            foreach (var kv in p.Rows) sb.AppendLine(Data(kv.Key) + ": " + Data(kv.Value));
             sb.AppendLine("VISUALLYSAFE-DATA>>>");
             sb.AppendLine();
             sb.AppendLine("## Your task");
@@ -164,8 +185,8 @@ namespace VisuallySafe
             var sb = new StringBuilder(Preamble(eng));
             sb.AppendLine("## What Visually Safe's Net tools found");
             sb.AppendLine("<<<VISUALLYSAFE-DATA");
-            sb.AppendLine("Result: " + title);
-            sb.AppendLine("Details: " + detail);
+            sb.AppendLine("Result: " + Data(title));
+            sb.AppendLine("Details: " + Data(detail));
             sb.AppendLine("VISUALLYSAFE-DATA>>>");
             sb.AppendLine();
             sb.AppendLine("## Your task");
@@ -178,7 +199,7 @@ namespace VisuallySafe
             var sb = new StringBuilder(Preamble(eng));
             sb.AppendLine("## What Visually Safe found");
             sb.AppendLine("<<<VISUALLYSAFE-DATA");
-            sb.AppendLine(Assistant.Report(AssistantContext.Capture(eng)));
+            sb.AppendLine(DataLines(Assistant.Report(AssistantContext.Capture(eng))));
             sb.AppendLine("VISUALLYSAFE-DATA>>>");
             sb.AppendLine();
             sb.AppendLine("## Your task");

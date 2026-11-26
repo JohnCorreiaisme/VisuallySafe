@@ -653,6 +653,7 @@ namespace VisuallySafe
                     {
                         var ps = new PipeSecurity();
                         ps.AddAccessRule(new PipeAccessRule(WindowsIdentity.GetCurrent().User, PipeAccessRights.ReadWrite | PipeAccessRights.CreateNewInstance, AccessControlType.Allow));
+                        ps.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.NetworkSid, null), PipeAccessRights.FullControl, AccessControlType.Deny));     // only programs on this PC, never over the network
                         var srv = new NamedPipeServerStream(NameFor(dataDir), PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances, PipeTransmissionMode.Byte, PipeOptions.None, 4096, 4096, ps);
                         srv.WaitForConnection();
                         // each command runs on its own thread: a long one (the screen saver runs until it ends) must not make later requests, like scanning icons, wait behind it
