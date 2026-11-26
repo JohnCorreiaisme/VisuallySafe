@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -23,6 +24,7 @@ namespace VisuallySafeSetup
             // the two hidden jobs that run with permission (started by the window below, after the person clicked Install)
             if (args.Length >= 3 && args[0] == "--install-files") return Installer.InstallFiles(args[1], args[2], args.Length > 3 ? args[3] : "");
             if (args.Length >= 3 && args[0] == "--uninstall-files") return Installer.UninstallFiles(args[1], args[2]);
+            if (args.Length >= 3 && args[0] == "--finish-uninstall") { int pid; int.TryParse(args[2], out pid); return Installer.FinishUninstall(args[1], pid); }
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             if (args.Length >= 1 && args[0] == "--update") return Installer.UpdateRun();
@@ -204,6 +206,21 @@ namespace VisuallySafeSetup
             }
         }
 
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern bool MoveFileEx(string existing, string target, int flags);
+
+        /// <summary>Second half of removal: runs from the temp copy, waits for the first half to end, then deletes the install folder and finally the temp copy itself (at the next restart).</summary>
+        public static int FinishUninstall(string dest, int parentPid)
+        {
+            try { using (var p = Process.GetProcessById(parentPid)) p.WaitForExit(15000); } catch { }
+            for (int i = 0; i < 20; i++)
+            {
+                try { if (!Directory.Exists(dest)) break; Directory.Delete(dest, true); break; }
+                catch { System.Threading.Thread.Sleep(500); }
+            }
+            try { MoveFileEx(Assembly.GetExecutingAssembly().Location, null, 4); } catch { }     // 4 = delete when Windows next starts
+            return 0;
+        }
+
         public static int UninstallFiles(string dest, string resultFile)
         {
             try
@@ -215,9 +232,11 @@ namespace VisuallySafeSetup
                 RemoveLegacy(null);
                 try { File.Delete(StartMenuLink); } catch { }
                 try { Registry.LocalMachine.DeleteSubKeyTree(UninstallKey, false); } catch { }
-                // this very program lives in the folder, so the folder is removed a moment after it closes
-                var psi = new ProcessStartInfo("cmd.exe", "/c ping 127.0.0.1 -n 4 >nul & rmdir /s /q \"" + dest + "\"") { CreateNoWindow = true, UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden };
-                Process.Start(psi);
+                // this very program lives in the folder, so a second copy of it (from the temp folder) removes the folder once this one has closed
+                string me = Assembly.GetExecutingAssembly().Location;
+                string tmp = Path.Combine(Path.GetTempPath(), "visuallysafe-remove-" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".exe");
+                File.Copy(me, tmp, true);
+                Process.Start(new ProcessStartInfo(tmp, "--finish-uninstall " + (char)34 + dest + (char)34 + " " + Process.GetCurrentProcess().Id) { CreateNoWindow = true, UseShellExecute = false, WindowStyle = ProcessWindowStyle.Hidden });
                 File.WriteAllText(resultFile, "OK");
                 return 0;
             }
